@@ -1,0 +1,6 @@
+[submodule "primesensor"]
+	path = primesensor
+	url = git://github.com/manctl/primesensor
+[submodule "sensorkinect"]
+	path = sensorkinect
+	url = git://github.com/manctl/primesensor
