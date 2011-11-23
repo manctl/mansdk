@@ -7,3 +7,6 @@
 [submodule "pcl"]
 	path = pcl
 	url = git@github.com:manctl/pcl.git
+[submodule "openni"]
+	path = openni
+	url = git@github.com:manctl/openni.git
