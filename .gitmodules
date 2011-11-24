@@ -1,15 +1,15 @@
 [submodule "primesensor"]
 	path = primesensor
-	url = git://github.com/manctl/primesensor
+	url = git@github.com:manctl/primesensor
 [submodule "sensorkinect"]
 	path = sensorkinect
-	url = git://github.com/manctl/primesensor
+	url = git@github.com:manctl/primesensor
 [submodule "pcl"]
 	path = pcl
-	url = git@github.com:manctl/pcl.git
+	url = git@github.com:manctl/pcl
 [submodule "openni"]
 	path = openni
-	url = git@github.com:manctl/openni.git
+	url = git@github.com:manctl/openni
 [submodule "libusb"]
 	path = libusb
 	url = git@github.com:manctl/libusb
