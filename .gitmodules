@@ -10,3 +10,6 @@
 [submodule "openni"]
 	path = openni
 	url = git@github.com:manctl/openni.git
+[submodule "libusb"]
+	path = libusb
+	url = git@github.com:manctl/libusb
