@@ -10,6 +10,6 @@
 [submodule "openni"]
 	path = openni
 	url = git@github.com:manctl/openni
-[submodule "libusb"]
-	path = libusb
-	url = git@github.com:manctl/libusb
+[submodule "usb"]
+	path = usb
+	url = git@github.com:manctl/usb
