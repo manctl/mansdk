@@ -13,3 +13,6 @@
 [submodule "usb"]
 	path = usb
 	url = git@github.com:manctl/usb
+[submodule "jpeg"]
+	path = jpeg
+	url = git@github.com:manctl/jpeg
