@@ -16,6 +16,8 @@ def build (t)
         "-DCMAKE_BUILD_TYPE:STRING=Release",
         "-DCMAKE_INSTALL_PREFIX:STRING=#{$stage_dir}",
         "-DCMAKE_PREFIX_PATH:STRING=#{$stage_dir}",
+        "-DCMAKE_INSTALL_NAME_DIR:STRING=@executable_path/../lib",
+#        "-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON",
         source_dir
         sh 'make'
         sh 'make', 'install'
