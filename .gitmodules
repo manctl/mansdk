@@ -1,18 +1,24 @@
 [submodule "primesensor"]
 	path = primesensor
 	url = git@github.com:manctl/primesensor
+	update = rebase
 [submodule "sensorkinect"]
 	path = sensorkinect
 	url = git@github.com:manctl/primesensor
+	update = rebase
 [submodule "pcl"]
 	path = pcl
 	url = git@github.com:manctl/pcl
+	update = rebase
 [submodule "openni"]
 	path = openni
 	url = git@github.com:manctl/openni
+	update = rebase
 [submodule "usb"]
 	path = usb
 	url = git@github.com:manctl/usb
+	update = rebase
 [submodule "jpeg"]
 	path = jpeg
 	url = git@github.com:manctl/jpeg
+	update = rebase
