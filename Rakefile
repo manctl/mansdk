@@ -4,6 +4,7 @@ OUTPUT='output'
 
 $stage_dir  = File.expand_path(STAGE)
 $output_dir = File.expand_path(OUTPUT)
+$build_dir  = File.expand_path(BUILD)
 
 task :init do
     mkdir_p $stage_dir
@@ -12,7 +13,7 @@ end
 
 def build (t)
     source_dir = File.expand_path(t.name)
-    build_dir = File.expand_path(File.join(BUILD, t.name))   
+    build_dir = File.join($build_dir, t.name)   
     mkdir_p build_dir
     cd build_dir do
         sh 'cmake',
@@ -45,6 +46,10 @@ task :pack do
   end
 end
 
+task :clean do
+    rm_rf [ $build_dir, $output_dir, $stage_dir ]
+end
+
 task :default => [
     :init,
 
@@ -53,7 +58,7 @@ task :default => [
     :openni,
     :primesensor,
     :sensorkinect,
-#   :pcl,
+    :pcl,
 
     :pack,
 ]
