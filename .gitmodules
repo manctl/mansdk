@@ -8,7 +8,7 @@
 	update = rebase
 [submodule "pcl"]
 	path = pcl
-	url = git@github.com:manctl/pcl
+	url = git@bitbucket.org:manctl/pcl
 	update = rebase
 [submodule "openni"]
 	path = openni
