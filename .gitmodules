@@ -22,3 +22,7 @@
 	path = jpeg
 	url = git@github.com:manctl/jpeg
 	update = rebase
+[submodule "nite"]
+	path = nite
+	url = git@bitbucket.org:manctl/nite
+        update = rebase
