@@ -32,12 +32,12 @@ def build (t)
     end
 end
 
-task :jpeg         do | t | build t end
-task :usb          do | t | build t end
-task :openni       do | t | build t end
-task :primesensor  do | t | build t end
-task :sensorkinect do | t | build t end
-task :pcl          do | t | build t end
+task :jpeg         => [ :init              ] do | t | build t end
+task :usb          => [ :init              ] do | t | build t end
+task :openni       => [ :init, :jpeg, :usb ] do | t | build t end
+task :primesensor  => [ :init, :openni     ] do | t | build t end
+task :sensorkinect => [ :init, :openni     ] do | t | build t end
+task :pcl          => [ :init, :openni     ] do | t | build t end
 
 task :pack do
   cd $stage_dir do
