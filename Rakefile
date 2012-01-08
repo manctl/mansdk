@@ -26,7 +26,7 @@ def build (t)
     cd build_dir do
         sh 'cmake',
         "-DCMAKE_GENERATOR:STRING=#{$cmake_gen}",
-        "-DCMAKE_BUILD_TYPE:STRING=Debug",
+        "-DCMAKE_BUILD_TYPE:STRING=Release",
         "-DCMAKE_INSTALL_PREFIX:PATH=#{$stage_dir}",
         "-DCMAKE_PREFIX_PATH:PATH=#{$stage_dir}",
         "-DOUTPUT_DIRECTORY:PATH=#{$output_dir}",
