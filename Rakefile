@@ -6,6 +6,14 @@ $stage_dir  = File.expand_path(STAGE)
 $output_dir = File.expand_path(OUTPUT)
 $build_dir  = File.expand_path(BUILD)
 
+if RUBY_PLATFORM =~ /win32|mingw32/
+    $cmake_gen = 'NMake Makefiles'
+    $make_cmd  = 'nmake'
+else
+    $cmake_gen = 'Unix Makefiles'
+    $make_cmd  = 'make'
+end
+
 task :init do
     mkdir_p $stage_dir
     mkdir_p $output_dir
@@ -17,7 +25,8 @@ def build (t)
     mkdir_p build_dir
     cd build_dir do
         sh 'cmake',
-        "-DCMAKE_BUILD_TYPE:STRING=Release",
+        "-DCMAKE_GENERATOR:STRING=#{$cmake_gen}",
+        "-DCMAKE_BUILD_TYPE:STRING=Debug",
         "-DCMAKE_INSTALL_PREFIX:PATH=#{$stage_dir}",
         "-DCMAKE_PREFIX_PATH:PATH=#{$stage_dir}",
         "-DOUTPUT_DIRECTORY:PATH=#{$output_dir}",
@@ -27,9 +36,10 @@ def build (t)
         "-DCMAKE_INSTALL_NAME_DIR:STRING=@loader_path/../lib",
         "-DCMAKE_INSTALL_RPATH:STRING=\$ORIGIN/../lib",
 #        "-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON",
+        "-DOPENNI_BUILD_SAMPLES:BOOL=ON",
         source_dir
-        sh 'make'
-        sh 'make', 'install'
+        sh $make_cmd
+        sh $make_cmd, 'install'
     end
 end
 
@@ -58,7 +68,7 @@ task :default => [
     :openni,
     :primesensor,
     :sensorkinect,
-    :pcl,
+#    :pcl,
 
     :pack,
 ]
