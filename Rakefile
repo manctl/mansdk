@@ -48,6 +48,7 @@ task :usb          => [ :init              ] do | t | build t end
 task :openni       => [ :init, :jpeg, :usb ] do | t | build t end
 task :primesensor  => [ :init, :openni     ] do | t | build t end
 task :sensorkinect => [ :init, :openni     ] do | t | build t end
+task :nite         => [ :init, :openni     ] do | t | build t end
 task :pcl          => [ :init, :openni     ] do | t | build t end
 
 task :pack do
@@ -66,6 +67,7 @@ task :default => [
     :jpeg,
     :usb,
     :openni,
+    :nite,
     :primesensor,
     :sensorkinect,
 #    :pcl,
