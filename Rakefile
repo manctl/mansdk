@@ -28,20 +28,12 @@ task :init do
     mkdir_p $build_dir
 end
 
-def cmake_build (t, args = {})
+def cmake_build (t, extra_defs = {}, extra_args = [])
+
     source_dir = File.expand_path(t.name)
     build_dir = File.join($build_dir, t.name)   
     mkdir_p build_dir
     
-    extra_defs = []
-    args.each do | name, type_val |
-        extra_defs << "-D#{name}:#{type_val[0]}=#{type_val[1]}"
-    end
-
-    extra_defs.each do | item |
-        puts "#{item}"
-    end
-
     cd build_dir do
         cmake_args = [    
             "-DCMAKE_GENERATOR:STRING=#{$cmake_gen}",
@@ -55,8 +47,16 @@ def cmake_build (t, args = {})
             "-DCMAKE_INSTALL_NAME_DIR:STRING=@loader_path/../lib",
             "-DCMAKE_INSTALL_RPATH:STRING=\$ORIGIN/../lib",
 #           "-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON",
-            *extra_defs
         ]
+
+        extra_defs.each do | name, type_val |
+            cmake_args << "-D#{name}:#{type_val[0]}=#{type_val[1]}"
+        end
+
+        extra_args.each do | arg |
+            cmake_args << arg
+        end
+
         cmake_args << source_dir
 
         sh 'cmake', *cmake_args
