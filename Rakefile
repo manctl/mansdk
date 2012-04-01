@@ -65,17 +65,26 @@ def cmake_build (t, extra_defs = {}, extra_args = [])
     end
 end
 
-task :jpeg         => [ :init              ] do | t | cmake_build t end
-task :usb          => [ :init              ] do | t | cmake_build t end
-task :openni       => [ :init, :jpeg, :usb ] do | t | cmake_build t, {
-    'OPENNI_BUILD_SAMPLES' => [ BOOL, ON ]
+task :jpeg         => [ :init,                    ] do | t | cmake_build t end
+task :usb          => [ :init,                    ] do | t | cmake_build t end
+task :openni       => [ :init, :jpeg, :usb,       ] do | t | cmake_build t, {
+    'OPENNI_BUILD_SAMPLES' => [ BOOL, ON ],
 } end
-task :primesensor  => [ :init, :openni     ] do | t | cmake_build t end
-task :sensorkinect => [ :init, :openni     ] do | t | cmake_build t end
-task :nite         => [ :init, :openni     ] do | t | cmake_build t end
-task :pcl          => [ :init, :openni     ] do | t | cmake_build t, {
-    'BUILD_simulation' => [ BOOL, OFF ]
-} end
+task :primesensor  => [ :init, :openni,           ] do | t | cmake_build t end
+task :sensorkinect => [ :init, :openni,           ] do | t | cmake_build t end
+task :nite         => [ :init, :openni,           ] do | t | cmake_build t end
+task :flann        => [ :init,                    ] do | t | cmake_build t, {
+    'BUILD_CUDA_LIB'        => [ BOOL, OFF ],
+    'BUILD_PYTHON_BINDINGS' => [ BOOL, OFF ],
+    'BUILD_MATLAB_BINDINGS' => [ BOOL, OFF ],
+}
+end
+task :pcl          => [ :init, :openni, :flann,  ] do | t | cmake_build t, {
+    'BUILD_simulation'             => [ BOOL, OFF ],
+    'FLANN_ROOT'                   => [ PATH, $stage_dir ],
+}
+#, [ '--trace' ]
+end
 
 task :pack do
   cd $stage_dir do

@@ -19,3 +19,6 @@
 [submodule "nite"]
 	path = nite
 	url = git@bitbucket.org:manctl/nite
+[submodule "flann"]
+	path = flann
+	url = git@github.com:manctl/flann
