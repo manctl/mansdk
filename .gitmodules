@@ -22,3 +22,6 @@
 [submodule "flann"]
 	path = flann
 	url = git@github.com:manctl/flann
+[submodule "eigen"]
+	path = eigen
+	url = git@bitbucket.org:manctl/eigen
