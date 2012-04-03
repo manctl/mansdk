@@ -25,3 +25,6 @@
 [submodule "eigen"]
 	path = eigen
 	url = git@bitbucket.org:manctl/eigen
+[submodule "opencv"]
+	path = opencv
+	url = git@bitbucket.org:manctl/opencv

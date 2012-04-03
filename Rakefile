@@ -73,6 +73,10 @@ task :openni       => [ :init, :jpeg, :usb,       ] do | t | cmake_build t, {
 task :primesensor  => [ :init, :openni,           ] do | t | cmake_build t end
 task :sensorkinect => [ :init, :openni,           ] do | t | cmake_build t end
 task :nite         => [ :init, :openni,           ] do | t | cmake_build t end
+task :opencv       => [ :init,                    ] do | t | cmake_build t, {
+    'WITH_CUDA'             => [ BOOL, OFF ],
+}
+end
 task :eigen        => [ :init,                    ] do | t | cmake_build t end
 task :flann        => [ :init,                    ] do | t | cmake_build t, {
     'BUILD_CUDA_LIB'        => [ BOOL, OFF ],
