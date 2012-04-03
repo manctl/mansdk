@@ -112,6 +112,7 @@ task :default => [
     :primesensor,
     :sensorkinect,
     :pcl,
+    :opencv,
 
     :pack,
 ]
