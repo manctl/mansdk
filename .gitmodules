@@ -28,3 +28,6 @@
 [submodule "opencv"]
 	path = opencv
 	url = git@bitbucket.org:manctl/opencv
+[submodule "qhull"]
+	path = qhull
+	url = git@github.com:manctl/qhull

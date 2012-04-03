@@ -84,7 +84,8 @@ task :flann        => [ :init,                    ] do | t | cmake_build t, {
     'BUILD_MATLAB_BINDINGS' => [ BOOL, OFF ],
 }
 end
-task :pcl          => [ :init, :eigen, :flann, :openni, ] do | t | cmake_build t, {
+task :qhull        => [ :init,                    ] do | t | cmake_build t end
+task :pcl          => [ :init, :eigen, :flann, :openni, :qhull, ] do | t | cmake_build t, {
     'BUILD_simulation'             => [ BOOL, OFF ],
     'FLANN_ROOT'                   => [ PATH, $stage_dir ],
 }
