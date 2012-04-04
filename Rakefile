@@ -100,12 +100,14 @@ task :boost => [ :init, ] do | t |
     cd source_dir do
         sh './bootstrap.sh', "--prefix=#{$stage_dir}"
         ENV['NO_COMPRESSION'] = '1'
-        sh './b2', "--prefix=#{$stage_dir}", "--build-dir=#{build_dir}", 'install'
+        sh './b2', "--prefix=#{$stage_dir}", "--build-dir=#{build_dir}", 'link=static', 'threading=multi', 'install'
     end
 end
 
-task :pcl          => [ :init, :eigen, :flann, :openni, :qhull, :boost ] do | t | cmake_build t, {
+task :pcl          => [ :init, :boost, :eigen, :flann, :openni, :qhull, ] do | t | cmake_build t, {
     'BUILD_simulation'             => [ BOOL, OFF ],
+    'BOOST_ROOT'                   => [ PATH, $stage_dir ],
+    'Boost_NO_SYSTEM_PATHS'        => [ BOOL, ON ],
     'FLANN_ROOT'                   => [ PATH, $stage_dir ],
 }
 #, [ '--trace' ]
