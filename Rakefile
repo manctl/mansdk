@@ -94,7 +94,17 @@ end
 
 task :qhull        => [ :init,                    ] do | t | cmake_build t end
 
-task :pcl          => [ :init, :eigen, :flann, :openni, :qhull, ] do | t | cmake_build t, {
+task :boost => [ :init, ] do | t |
+    source_dir = File.expand_path(t.name)
+    build_dir = make_build_dir t.name
+    cd source_dir do
+        sh './bootstrap.sh', "--prefix=#{$stage_dir}"
+        ENV['NO_COMPRESSION'] = '1'
+        sh './b2', "--prefix=#{$stage_dir}", "--build-dir=#{build_dir}", 'install'
+    end
+end
+
+task :pcl          => [ :init, :eigen, :flann, :openni, :qhull, :boost ] do | t | cmake_build t, {
     'BUILD_simulation'             => [ BOOL, OFF ],
     'FLANN_ROOT'                   => [ PATH, $stage_dir ],
 }
@@ -104,16 +114,6 @@ end
 task :opencv       => [ :init,                    ] do | t | cmake_build t, {
     'WITH_CUDA'             => [ BOOL, OFF ],
 }
-end
-
-task :boost => [ :init, ] do | t |
-    source_dir = File.expand_path(t.name)
-    build_dir = make_build_dir t.name
-    cd source_dir do
-        sh './bootstrap.sh', "--prefix=#{$stage_dir}"
-        ENV['NO_COMPRESSION'] = '1'
-        sh './b2', "--prefix=#{$stage_dir}", "--build-dir=#{build_dir}", 'install'
-    end
 end
 
 task :pack do
