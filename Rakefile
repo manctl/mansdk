@@ -28,13 +28,17 @@ task :init do
     mkdir_p $build_dir
 end
 
+def make_build_dir (name)
+    build_dir = File.join($build_dir, name)   
+    mkdir_p build_dir
+    return build_dir
+end
+
 def cmake_build (t, extra_defs = {}, extra_args = [])
 
     source_dir = File.expand_path(t.name)
-    build_dir = File.join($build_dir, t.name)   
-    mkdir_p build_dir
-    
-    cd build_dir do
+
+    cd make_build_dir t.name do
         cmake_args = [    
             "-DCMAKE_GENERATOR:STRING=#{$cmake_gen}",
             "-DCMAKE_BUILD_TYPE:STRING=Release",
@@ -66,30 +70,50 @@ def cmake_build (t, extra_defs = {}, extra_args = [])
 end
 
 task :jpeg         => [ :init,                    ] do | t | cmake_build t end
+
 task :usb          => [ :init,                    ] do | t | cmake_build t end
+
 task :openni       => [ :init, :jpeg, :usb,       ] do | t | cmake_build t, {
     'OPENNI_BUILD_SAMPLES' => [ BOOL, ON ],
 } end
+
 task :primesensor  => [ :init, :openni,           ] do | t | cmake_build t end
+
 task :sensorkinect => [ :init, :openni,           ] do | t | cmake_build t end
+
 task :nite         => [ :init, :openni,           ] do | t | cmake_build t end
-task :opencv       => [ :init,                    ] do | t | cmake_build t, {
-    'WITH_CUDA'             => [ BOOL, OFF ],
-}
-end
+
 task :eigen        => [ :init,                    ] do | t | cmake_build t end
+
 task :flann        => [ :init,                    ] do | t | cmake_build t, {
     'BUILD_CUDA_LIB'        => [ BOOL, OFF ],
     'BUILD_PYTHON_BINDINGS' => [ BOOL, OFF ],
     'BUILD_MATLAB_BINDINGS' => [ BOOL, OFF ],
 }
 end
+
 task :qhull        => [ :init,                    ] do | t | cmake_build t end
+
 task :pcl          => [ :init, :eigen, :flann, :openni, :qhull, ] do | t | cmake_build t, {
     'BUILD_simulation'             => [ BOOL, OFF ],
     'FLANN_ROOT'                   => [ PATH, $stage_dir ],
 }
 #, [ '--trace' ]
+end
+
+task :opencv       => [ :init,                    ] do | t | cmake_build t, {
+    'WITH_CUDA'             => [ BOOL, OFF ],
+}
+end
+
+task :boost => [ :init, ] do | t |
+    source_dir = File.expand_path(t.name)
+    build_dir = make_build_dir t.name
+    cd source_dir do
+        sh './bootstrap.sh', "--prefix=#{$stage_dir}"
+        ENV['NO_COMPRESSION'] = '1'
+        sh './b2', "--prefix=#{$stage_dir}", "--build-dir=#{build_dir}", 'install'
+    end
 end
 
 task :pack do
@@ -113,6 +137,7 @@ task :default => [
     :sensorkinect,
     :pcl,
     :opencv,
+    :boost,
 
     :pack,
 ]

@@ -31,3 +31,6 @@
 [submodule "qhull"]
 	path = qhull
 	url = git@github.com:manctl/qhull
+[submodule "boost"]
+	path = boost
+	url = git@github.com:manctl/boost
