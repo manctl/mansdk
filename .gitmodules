@@ -34,3 +34,6 @@
 [submodule "boost"]
 	path = boost
 	url = git@github.com:manctl/boost
+[submodule "vtk"]
+	path = vtk
+	url = git@github.com:manctl/vtk

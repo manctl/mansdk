@@ -104,7 +104,15 @@ task :boost => [ :init, ] do | t |
     end
 end
 
-task :pcl          => [ :init, :boost, :eigen, :flann, :openni, :qhull, ] do | t | cmake_build t, {
+task :vtk => [ :init, ] do | t | cmake_build t, {
+    'CMAKE_VERBOSE_MAKEFILE' => [ BOOL, ON ],
+    'CMAKE_C_FLAGS'   => [ STRING, '-fPIC' ],
+    'CMAKE_CXX_FLAGS' => [ STRING, '-fPIC' ],
+    'BUILD_TESTING' => [ BOOL, OFF ],
+}
+end
+
+task :pcl          => [ :init, :boost, :eigen, :flann, :openni, :qhull, :vtk ] do | t | cmake_build t, {
     'BUILD_simulation'             => [ BOOL, OFF ],
     'BOOST_ROOT'                   => [ PATH, $stage_dir ],
     'Boost_NO_SYSTEM_PATHS'        => [ BOOL, ON ],
