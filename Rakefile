@@ -100,10 +100,12 @@ task :boost => [ :init, ] do | t |
     cd source_dir do
         sh './bootstrap.sh', "--prefix=#{$stage_dir}"
         ENV['NO_COMPRESSION'] = '1'
-        sh './b2', "--prefix=#{$stage_dir}", "--build-dir=#{build_dir}", 'link=static', 'threading=multi', 'install'
+	# FIXME: -fPIC is for linux-x86_64 only.
+        sh './b2', "--prefix=#{$stage_dir}", "--build-dir=#{build_dir}", 'cxxflags=-fPIC', 'link=static', 'threading=multi', 'install'
     end
 end
 
+# FIXME: -fPIC is for linux-x86_64 only.
 task :vtk => [ :init, ] do | t | cmake_build t, {
     'CMAKE_VERBOSE_MAKEFILE' => [ BOOL, ON ],
     'CMAKE_C_FLAGS'   => [ STRING, '-fPIC' ],
