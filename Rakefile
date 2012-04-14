@@ -17,9 +17,11 @@ $build_dir  = File.expand_path(BUILD)
 if RUBY_PLATFORM =~ /win32|mingw32/
     $cmake_gen = 'NMake Makefiles'
     $make_cmd  = 'nmake'
+    $unix = false
 else
     $cmake_gen = 'Unix Makefiles'
     $make_cmd  = 'make'
+    $unix = true
 end
 
 task :init do
@@ -97,19 +99,30 @@ task :qhull        => [ :init,                    ] do | t | cmake_build t end
 task :boost => [ :init, ] do | t |
     source_dir = File.expand_path(t.name)
     build_dir = make_build_dir t.name
+
+    if $unix then
+        bootstrap = './bootstrap.sh'
+        b2 = './b2'
+        def path (str) return str end
+    else
+        bootstrap = 'bootstrap.bat'
+        b2 = 'b2.exe'
+        def path (str) return str.gsub('/', '\\') end
+    end
+
     cd source_dir do
-        sh './bootstrap.sh', "--prefix=#{$stage_dir}"
+        sh bootstrap
         ENV['NO_COMPRESSION'] = '1'
-	# FIXME: -fPIC is for linux-x86_64 only.
-        sh './b2', "--prefix=#{$stage_dir}", "--build-dir=#{build_dir}", '--without-python', 'cxxflags=-fPIC', 'link=static', 'threading=multi', 'install'
+        # FIXME: -fPIC is for linux-x86_64 only.
+        sh b2, "--prefix=#{path($stage_dir)}", "--build-dir=#{path(build_dir)}", '--without-python', 'cxxflags=-fPIC', 'link=static', 'threading=multi', 'install'
     end
 end
 
 # FIXME: -fPIC is for linux-x86_64 only.
 task :vtk => [ :init, ] do | t | cmake_build t, {
     'CMAKE_VERBOSE_MAKEFILE' => [ BOOL, ON ],
-    'CMAKE_C_FLAGS'   => [ STRING, '-fPIC' ],
-    'CMAKE_CXX_FLAGS' => [ STRING, '-fPIC' ],
+    'CMAKE_C_FLAGS'   => [ STRING, '-fPIC' ], # FIXME: Linux-x86_64 only.
+    'CMAKE_CXX_FLAGS' => [ STRING, '-fPIC' ], # FIXME: Likewise.
     'BUILD_TESTING' => [ BOOL, OFF ],
 }
 end
