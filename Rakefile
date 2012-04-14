@@ -101,7 +101,7 @@ task :boost => [ :init, ] do | t |
         sh './bootstrap.sh', "--prefix=#{$stage_dir}"
         ENV['NO_COMPRESSION'] = '1'
 	# FIXME: -fPIC is for linux-x86_64 only.
-        sh './b2', "--prefix=#{$stage_dir}", "--build-dir=#{build_dir}", 'cxxflags=-fPIC', 'link=static', 'threading=multi', 'install'
+        sh './b2', "--prefix=#{$stage_dir}", "--build-dir=#{build_dir}", '--without-python', 'cxxflags=-fPIC', 'link=static', 'threading=multi', 'install'
     end
 end
 
