@@ -132,11 +132,13 @@ task :pcl          => [ :init, :boost, :eigen, :flann, :openni, :qhull, :vtk ] d
     'BOOST_ROOT'                   => [ PATH, $stage_dir ],
     'Boost_NO_SYSTEM_PATHS'        => [ BOOL, ON ],
     'FLANN_ROOT'                   => [ PATH, $stage_dir ],
+    'PCL_SHARED_LIBS'              => [ BOOL, OFF ],
 }
 #, [ '--trace' ]
 end
 
 task :opencv       => [ :init,                    ] do | t | cmake_build t, {
+    'BUILD_SHARED_LIBS'     => [ BOOL, OFF ],
     'WITH_CUDA'             => [ BOOL, OFF ],
 }
 end
