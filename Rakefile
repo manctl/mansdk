@@ -140,6 +140,7 @@ end
 task :opencv       => [ :init,                    ] do | t | cmake_build t, {
     'BUILD_SHARED_LIBS'     => [ BOOL, OFF ],
     'WITH_CUDA'             => [ BOOL, OFF ],
+    'BUILD_TESTS'           => [ BOOL, ON  ],
 }
 end
 
