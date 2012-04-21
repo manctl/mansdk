@@ -18,9 +18,11 @@ if RUBY_PLATFORM =~ /win32|mingw32/
     $cmake_gen = 'NMake Makefiles'
     $make_cmd  = 'nmake'
     $unix = false
+    $make_options = []
 else
     $cmake_gen = 'Unix Makefiles'
     $make_cmd  = 'make'
+    $make_options = ['-j', '4']
     $unix = true
 end
 
@@ -52,7 +54,8 @@ def cmake_build (t, extra_defs = {}, extra_args = [])
             "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=#{$output_dir}/lib",
             "-DCMAKE_INSTALL_NAME_DIR:STRING=@loader_path/../lib",
             "-DCMAKE_INSTALL_RPATH:STRING=\$ORIGIN/../lib",
-#           "-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON",
+            "-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON",
+            *extra_defs
         ]
 
         extra_defs.each do | name, type_val |
@@ -66,7 +69,7 @@ def cmake_build (t, extra_defs = {}, extra_args = [])
         cmake_args << source_dir
 
         sh 'cmake', *cmake_args
-        sh $make_cmd
+        sh $make_cmd, *$make_options
         sh $make_cmd, 'install'
     end
 end
