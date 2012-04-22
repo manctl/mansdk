@@ -54,8 +54,7 @@ def cmake_build (t, extra_defs = {}, extra_args = [])
             "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=#{$output_dir}/lib",
             "-DCMAKE_INSTALL_NAME_DIR:STRING=@loader_path/../lib",
             "-DCMAKE_INSTALL_RPATH:STRING=\$ORIGIN/../lib",
-            "-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON",
-            *extra_defs
+            "-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON"
         ]
 
         extra_defs.each do | name, type_val |
@@ -131,11 +130,14 @@ task :vtk => [ :init, ] do | t | cmake_build t, {
 end
 
 task :pcl          => [ :init, :boost, :eigen, :flann, :openni, :qhull, :vtk ] do | t | cmake_build t, {
-    'BUILD_simulation'             => [ BOOL, OFF ],
-    'BOOST_ROOT'                   => [ PATH, $stage_dir ],
-    'Boost_NO_SYSTEM_PATHS'        => [ BOOL, ON ],
-    'FLANN_ROOT'                   => [ PATH, $stage_dir ],
-    'PCL_SHARED_LIBS'              => [ BOOL, OFF ],
+    'BUILD_simulation'        => [ BOOL, OFF ],
+    'BOOST_ROOT'              => [ PATH, $stage_dir ],
+    'Boost_NO_SYSTEM_PATHS'   => [ BOOL, ON ],
+    'FLANN_ROOT'              => [ PATH, $stage_dir ],
+    'PCL_SHARED_LIBS'         => [ BOOL, OFF ],
+    'BUILD_TESTS'             => [ BOOL, OFF ],
+    'CMAKE_C_FLAGS'           => [ STRING, '-fPIC' ], # FIXME: Linux-x86_64 only.
+    'CMAKE_CXX_FLAGS'         => [ STRING, '-fPIC' ], # FIXME: Likewise.
 }
 #, [ '--trace' ]
 end
@@ -144,6 +146,9 @@ task :opencv       => [ :init,                    ] do | t | cmake_build t, {
     'BUILD_SHARED_LIBS'     => [ BOOL, OFF ],
     'WITH_CUDA'             => [ BOOL, OFF ],
     'BUILD_TESTS'           => [ BOOL, ON  ],
+    'WITH_FFMPEG'           => [ BOOL, OFF  ],
+    'CMAKE_C_FLAGS'         => [ STRING, '-fPIC' ], # FIXME: Linux-x86_64 only.
+    'CMAKE_CXX_FLAGS'       => [ STRING, '-fPIC' ], # FIXME: Likewise.
 }
 end
 
