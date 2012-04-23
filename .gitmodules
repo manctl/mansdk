@@ -37,3 +37,6 @@
 [submodule "vtk"]
 	path = vtk
 	url = git@github.com:manctl/vtk
+[submodule "qt"]
+	path = qt
+	url = git@bitbucket.org:manctl/qt
