@@ -116,7 +116,8 @@ task :boost => [ :init, ] do | t |
         sh bootstrap
         ENV['NO_COMPRESSION'] = '1'
         # FIXME: -fPIC is for linux-x86_64 only.
-        sh b2, "--prefix=#{path($stage_dir)}", "--build-dir=#{path(build_dir)}", '--without-python', 'cxxflags=-fPIC', 'link=static', 'threading=multi', 'install'
+        # FIXME: Address model should not be hard-coded.
+        sh b2, "--prefix=#{path($stage_dir)}", "--build-dir=#{path(build_dir)}", '--without-python', 'cxxflags=-fPIC', 'architecture=x86', 'address-model=64', 'link=static', 'threading=multi', 'install'
     end
 end
 
