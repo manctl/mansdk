@@ -15,11 +15,13 @@ $output_dir = File.expand_path(OUTPUT)
 $build_dir  = File.expand_path(BUILD)
 
 if RUBY_PLATFORM =~ /win32|mingw32/
+    WIN32=true
     $cmake_gen = 'NMake Makefiles'
     $make_cmd  = 'nmake'
     $unix = false
     $make_options = []
 else
+    WIN32=false
     $cmake_gen = 'Unix Makefiles'
     $make_cmd  = 'make'
     $make_options = ['-j', '4']
@@ -153,6 +155,17 @@ task :opencv       => [ :init,                    ] do | t | cmake_build t, {
 }
 end
 
+task :qt => [ :init, ] do | t |  
+    if WIN32 then
+        source_dir = File.expand_path(t.name)
+        build_dir = make_build_dir t.name
+        cd build_dir do
+            # FIXME: Do 32/64 bit dispatch.
+            sh "#{source_dir}/build-qt-win64-msvc10.cmd"
+        end
+    end
+end
+
 task :pack do
   cd $stage_dir do
     # FIXME: Package stage contents.
@@ -175,6 +188,7 @@ task :default => [
     :pcl,
     :opencv,
     :boost,
+    :qt,
 
     :pack,
 ]
