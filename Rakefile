@@ -149,7 +149,8 @@ task :opencv       => [ :init,                    ] do | t | cmake_build t, {
     'BUILD_SHARED_LIBS'     => [ BOOL, OFF ],
     'WITH_CUDA'             => [ BOOL, OFF ],
     'BUILD_TESTS'           => [ BOOL, ON  ],
-    'WITH_FFMPEG'           => [ BOOL, OFF  ],
+    'WITH_FFMPEG'           => [ BOOL, OFF ],
+    'WITH_EIGEN'            => [ BOOL, OFF ],
     'CMAKE_C_FLAGS'         => [ STRING, '-fPIC' ], # FIXME: Linux-x86_64 only.
     'CMAKE_CXX_FLAGS'       => [ STRING, '-fPIC' ], # FIXME: Likewise.
 }
