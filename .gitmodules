@@ -43,3 +43,7 @@
 [submodule "ruby"]
 	path = ruby
 	url = git@github.com:manctl/ruby.git
+[submodule "png"]
+	path = png
+	url = ./png
+
