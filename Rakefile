@@ -162,6 +162,22 @@ task :qt => [ :init, ] do | t |
         cd build_dir do
             # FIXME: Do 32/64 bit dispatch.
             sh "#{source_dir}/build-qt-win64-msvc10.cmd"
+        end    
+    end
+end
+
+task :ruby => [ :init, ] do | t |
+    if WIN32 then
+    else
+        source_dir = File.expand_path(t.name)
+        build_dir = make_build_dir t.name
+        cd source_dir do
+             sh 'autoconf'
+        end
+        cd build_dir do
+             sh "#{source_dir}/configure", "--prefix=#{$stage_dir}"
+             sh 'make'
+             sh 'make', 'install', 'install-lib'
         end
     end
 end
