@@ -205,6 +205,7 @@ task :default => [
     :opencv,
     :boost,
     :qt,
+    :ruby,
 
     :pack,
 ]
