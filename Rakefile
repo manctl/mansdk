@@ -77,6 +77,8 @@ end
 
 task :jpeg         => [ :init,                    ] do | t | cmake_build t end
 
+task :png          => [ :init,                    ] do | t | cmake_build t end
+
 task :usb          => [ :init,                    ] do | t | cmake_build t end
 
 task :openni       => [ :init, :jpeg, :usb,       ] do | t | cmake_build t, {
@@ -145,7 +147,7 @@ task :pcl          => [ :init, :boost, :eigen, :flann, :openni, :qhull, :vtk ] d
 #, [ '--trace' ]
 end
 
-task :opencv       => [ :init,                    ] do | t | cmake_build t, {
+task :opencv       => [ :init, :png                ] do | t | cmake_build t, {
     'BUILD_SHARED_LIBS'     => [ BOOL, OFF ],
     'WITH_CUDA'             => [ BOOL, OFF ],
     'BUILD_TESTS'           => [ BOOL, ON  ],
