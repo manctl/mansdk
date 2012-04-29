@@ -75,6 +75,8 @@ end
 
 task :jpeg         => [ :init,                    ] do | t | cmake_build t end
 
+task :png          => [ :init,                    ] do | t | cmake_build t end
+
 task :usb          => [ :init,                    ] do | t | cmake_build t end
 
 task :openni       => [ :init, :jpeg, :usb,       ] do | t | cmake_build t, {
