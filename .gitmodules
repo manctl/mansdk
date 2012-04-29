@@ -40,3 +40,6 @@
 [submodule "qt"]
 	path = qt
 	url = git@bitbucket.org:manctl/qt
+[submodule "ruby"]
+	path = ruby
+	url = git@github.com:manctl/ruby.git
