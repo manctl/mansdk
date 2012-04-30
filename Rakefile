@@ -14,6 +14,15 @@ $stage_dir  = File.expand_path(STAGE)
 $output_dir = File.expand_path(OUTPUT)
 $build_dir  = File.expand_path(BUILD)
 
+#-------------------------------------------------------------------------------
+
+def edit_file (path, pattern, replacement)
+    text = File.read(path).gsub(pattern, replacement)
+    File.open(path, "w") { |file| file << text }
+end
+
+#-------------------------------------------------------------------------------
+
 if RUBY_PLATFORM =~ /win32|mingw32/
     WIN32=true
     UNIX=false
@@ -30,11 +39,7 @@ else
     def path (str) return str end
 end
 
-task :init do
-    mkdir_p $stage_dir
-    mkdir_p $output_dir
-    mkdir_p $build_dir
-end
+#-------------------------------------------------------------------------------
 
 def make_build_dir (name)
     build_dir = File.join($build_dir, name)   
@@ -76,6 +81,26 @@ def cmake_build (t, extra_defs = {}, extra_args = [])
         sh $make_cmd, 'install'
     end
 end
+
+#-------------------------------------------------------------------------------
+
+task :init do
+    mkdir_p $stage_dir
+    mkdir_p $output_dir
+    mkdir_p $build_dir
+end
+
+task :clean do
+    rm_rf [ $build_dir, $output_dir, $stage_dir ]
+end
+
+task :pack do
+  cd $stage_dir do
+    # FIXME: Package stage contents.
+  end
+end
+
+#-------------------------------------------------------------------------------
 
 task :jpeg         => [ :init,                    ] do | t | cmake_build t end
 
@@ -169,11 +194,6 @@ task :qt => [ :init, ] do | t |
     end
 end
 
-def edit_file (path, pattern, replacement)
-    text = File.read(path).gsub(pattern, replacement)
-    File.open(path, "w") { |file| file << text }
-end
-
 task :ruby => [ :init, ] do | t |
     source_dir = File.expand_path(t.name)
     build_dir = make_build_dir t.name
@@ -197,19 +217,13 @@ task :ruby => [ :init, ] do | t |
     end
 end
 
-task :pack do
-  cd $stage_dir do
-    # FIXME: Package stage contents.
-  end
-end
-
-task :clean do
-    rm_rf [ $build_dir, $output_dir, $stage_dir ]
-end
+#-------------------------------------------------------------------------------
 
 task :default => [
     :init,
 
+    :zlib,
+    :png,
     :jpeg,
     :usb,
     :openni,
