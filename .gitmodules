@@ -46,3 +46,6 @@
 [submodule "zlib"]
 	path = zlib
 	url = git@github.com:manctl/zlib
+[submodule "png"]
+	path = png
+	url = git@bitbucket.org:manctl/png
