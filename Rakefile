@@ -16,16 +16,18 @@ $build_dir  = File.expand_path(BUILD)
 
 if RUBY_PLATFORM =~ /win32|mingw32/
     WIN32=true
+    UNIX=false
     $cmake_gen = 'NMake Makefiles'
     $make_cmd  = 'nmake'
-    $unix = false
     $make_options = []
+    def path (str) return str.gsub('/', '\\') end
 else
     WIN32=false
+    UNIX=true
     $cmake_gen = 'Unix Makefiles'
     $make_cmd  = 'make'
     $make_options = ['-j', '4']
-    $unix = true
+    def path (str) return str end
 end
 
 task :init do
@@ -106,14 +108,12 @@ task :boost => [ :init, ] do | t |
     source_dir = File.expand_path(t.name)
     build_dir = make_build_dir t.name
 
-    if $unix then
+    if UNIX then
         bootstrap = './bootstrap.sh'
         b2 = './b2'
-        def path (str) return str end
     else
         bootstrap = 'bootstrap.bat'
         b2 = 'b2.exe'
-        def path (str) return str.gsub('/', '\\') end
     end
 
     cd source_dir do
@@ -169,11 +169,23 @@ task :qt => [ :init, ] do | t |
     end
 end
 
+def edit_file (path, pattern, replacement)
+    text = File.read(path).gsub(pattern, replacement)
+    File.open(path, "w") { |file| file << text }
+end
+
 task :ruby => [ :init, ] do | t |
+    source_dir = File.expand_path(t.name)
+    build_dir = make_build_dir t.name
+    ENV['PATH'] = "#{ENV['PATH']};#{path(source_dir)}\\win32\\bin"
     if WIN32 then
+        cd build_dir do
+            sh "#{source_dir}/win32/configure.bat"
+            edit_file("#{build_dir}/Makefile", /^RT = msvcr\d+/, 'RT = msvcrt')
+            sh 'nmake'
+            sh 'nmake', "DESTDIR=#{$stage_dir}", 'install', 'install-lib'
+        end
     else
-        source_dir = File.expand_path(t.name)
-        build_dir = make_build_dir t.name
         cd source_dir do
              sh 'autoconf'
         end
