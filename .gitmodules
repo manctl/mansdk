@@ -43,9 +43,6 @@
 [submodule "ruby"]
 	path = ruby
 	url = git@github.com:manctl/ruby.git
-[submodule "png"]
-	path = png
-	url = git@github.com:manctl/png
 [submodule "zlib"]
 	path = zlib
 	url = git@github.com:manctl/zlib
