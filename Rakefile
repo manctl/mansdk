@@ -164,7 +164,7 @@ task :qt => [ :init, ] do | t |
         build_dir = make_build_dir t.name
         cd build_dir do
             # FIXME: Do 32/64 bit dispatch.
-            sh "#{source_dir}/build-qt-win64-msvc10.cmd"
+            sh "#{source_dir}/build-qt-windows-msvc10.cmd", 'amd64'
         end    
     end
 end
