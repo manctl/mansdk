@@ -162,6 +162,7 @@ task :vtk => [ :init, ] do | t | cmake_build t, {
 end
 
 task :pcl          => [ :init, :boost, :eigen, :flann, :openni, :qhull, :vtk ] do | t | cmake_build t, {
+    'BUILD_apps'              => [ BOOL, OFF ],
     'BUILD_simulation'        => [ BOOL, OFF ],
     'BOOST_ROOT'              => [ PATH, $stage_dir ],
     'Boost_NO_SYSTEM_PATHS'   => [ BOOL, ON ],
