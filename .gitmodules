@@ -49,3 +49,6 @@
 [submodule "png"]
 	path = png
 	url = git@bitbucket.org:manctl/png
+[submodule "sensorkin4win"]
+	path = sensorkin4win
+	url = git@github.com:manctl/primesensor

@@ -114,9 +114,11 @@ task :openni       => [ :init, :jpeg, :usb,       ] do | t | cmake_build t, {
     'OPENNI_BUILD_SAMPLES' => [ BOOL, ON ],
 } end
 
-task :primesensor  => [ :init, :openni,           ] do | t | cmake_build t end
+task :primesensor   => [ :init, :openni,           ] do | t | cmake_build t end
 
-task :sensorkinect => [ :init, :openni,           ] do | t | cmake_build t end
+task :sensorkinect  => [ :init, :openni,           ] do | t | cmake_build t end
+
+task :sensorkin4win => [ :init, :openni,           ] do | t | cmake_build t end
 
 task :nite         => [ :init, :openni,           ] do | t | cmake_build t end
 
