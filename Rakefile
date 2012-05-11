@@ -131,7 +131,11 @@ task :flann        => [ :init,                    ] do | t | cmake_build t, {
 }
 end
 
-task :qhull        => [ :init,                    ] do | t | cmake_build t end
+task :qhull        => [ :init,                    ] do | t | cmake_build t, {
+    'CMAKE_C_FLAGS'         => [ STRING, '-fPIC' ], # FIXME: Linux-x86_64 only.
+    'CMAKE_CXX_FLAGS'       => [ STRING, '-fPIC' ], # FIXME: Likewise.
+}
+end
 
 task :boost => [ :init, ] do | t |
     source_dir = File.expand_path(t.name)
@@ -140,9 +144,11 @@ task :boost => [ :init, ] do | t |
     if UNIX then
         bootstrap = './bootstrap.sh'
         b2 = './b2'
+        def path (str) return str end
     else
         bootstrap = 'bootstrap.bat'
         b2 = 'b2.exe'
+        def path (str) return str.gsub('/', '\\') end
     end
 
     cd source_dir do
