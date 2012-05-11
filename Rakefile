@@ -195,12 +195,17 @@ task :opencv       => [ :init, :png                ] do | t | cmake_build t, {
 end
 
 task :qt => [ :init, ] do | t |  
-    if WIN32 then
         source_dir = File.expand_path(t.name)
         build_dir = make_build_dir t.name
+    if WIN32 then
         cd build_dir do
             # FIXME: Do 32/64 bit dispatch.
             sh "#{source_dir}/build-qt-windows-msvc10.cmd", 'amd64'
+        end    
+    else
+        cd build_dir do
+            # FIXME: Do 32/64 bit dispatch.
+            sh "#{source_dir}/build-qt-unix-make.sh", $stage_dir
         end    
     end
 end
