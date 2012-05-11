@@ -1,3 +1,9 @@
 build
 stage
 output
+build-debug
+stage-debug
+output-debug
+build-relwithdebinfo
+stage-relwithdebinfo
+output-relwithdebinfo
