@@ -35,7 +35,7 @@ else
     UNIX=true
     $cmake_gen = 'Unix Makefiles'
     $make_cmd  = 'make'
-    # $make_options = ['-j', '4']
+    $make_options = [] # ['-j', '4']
     def path (str) return str end
 end
 
