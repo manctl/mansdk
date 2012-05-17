@@ -52,3 +52,6 @@
 [submodule "sensorkin4win"]
 	path = sensorkin4win
 	url = git@github.com:manctl/primesensor
+[submodule "vectorial"]
+	path = vectorial
+	url = git@github.com:manctl/vectorial
