@@ -104,6 +104,8 @@ end
 
 task :zlib         => [ :init,                    ] do | t | cmake_build t end
 
+task :vectorial    => [ :init,                    ] do | t | cmake_build t end
+
 task :jpeg         => [ :init,                    ] do | t | cmake_build t end
 
 task :png          => [ :init,                    ] do | t | cmake_build t end
@@ -152,7 +154,7 @@ task :boost => [ :init, ] do | t |
     end
 
     cd source_dir do
-        sh bootstrap
+        #sh bootstrap
         ENV['NO_COMPRESSION'] = '1'
         # FIXME: -fPIC is for linux-x86_64 only.
         # FIXME: Address model should not be hard-coded.
@@ -235,6 +237,7 @@ task :default => [
 
     :zlib,
     :png,
+    :vectorial,
     :jpeg,
     :usb,
     :openni,

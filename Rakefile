@@ -104,6 +104,8 @@ end
 
 task :zlib         => [ :init,                    ] do | t | cmake_build t end
 
+task :vectorial    => [ :init,                    ] do | t | cmake_build t end
+
 task :jpeg         => [ :init,                    ] do | t | cmake_build t end
 
 task :png          => [ :init,                    ] do | t | cmake_build t end
@@ -241,6 +243,7 @@ task :default => [
 
     :zlib,
     :png,
+    :vectorial,
     :jpeg,
     :usb,
     :openni,
