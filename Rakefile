@@ -218,7 +218,10 @@ cmake_task :flann, [], {
     'BUILD_CUDA_LIB'        => [ BOOL, OFF ],
     'BUILD_PYTHON_BINDINGS' => [ BOOL, OFF ],
     'BUILD_MATLAB_BINDINGS' => [ BOOL, OFF ],
+    'BUILD_C_BINDINGS'      => [ BOOL, OFF ],
+    'CMAKE_CXX_FLAGS'       => [ STRING, "/bigobj" ], # FIXME: Windows only.
 }
+
 cmake_task :qhull, [], {
     'CMAKE_C_FLAGS'   => [ STRING, '-fPIC' ], # FIXME: Linux-x86_64 only.
     'CMAKE_CXX_FLAGS' => [ STRING, '-fPIC' ], # FIXME: Likewise.
