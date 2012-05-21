@@ -1,6 +1,6 @@
-BUILD='build'
-STAGE='stage'
+ BUILD='build'
 OUTPUT='output'
+ STAGE='stage'
 
 BOOL="BOOL"
 STRING="STRING"
@@ -10,9 +10,17 @@ INTERNAL="INTERNAL"
 ON="ON"
 OFF="OFF"
 
-$stage_dir  = File.expand_path(STAGE)
+ BUILD_DIR= "__BUILD_DIR__"
+OUTPUT_DIR="__OUTPUT_DIR__"
+ STAGE_DIR= "__STAGE_DIR__"
+
+CONFIGS=[ "debug", "release", "relwithdebinfo", "minsizerel" ]
+
+DEFAULT_CONFIG="release"
+
+ $build_dir = File.expand_path(BUILD)
 $output_dir = File.expand_path(OUTPUT)
-$build_dir  = File.expand_path(BUILD)
+ $stage_dir = File.expand_path(STAGE)
 
 #-------------------------------------------------------------------------------
 
@@ -41,33 +49,68 @@ end
 
 #-------------------------------------------------------------------------------
 
-def make_build_dir (name)
-    build_dir = File.join($build_dir, name)   
+def config_path (path, config)
+    return "#{path}/#{config}"
+end
+
+def config_symbol (sym, config)
+    return "#{sym.to_s}:#{config}".intern
+end
+
+def config_deps (deps, config)
+    ret = []
+    [ :init, *deps ].each do | dep |
+        ret << config_symbol(dep, config)
+    end
+    return ret
+end
+
+def config_val (val, config)
+    return {
+         BUILD_DIR => config_path( $build_dir, config),
+        OUTPUT_DIR => config_path($output_dir, config),
+         STAGE_DIR => config_path( $stage_dir, config),
+    } [val] || val
+end
+
+#-------------------------------------------------------------------------------
+
+def make_build_dir (name, config)
+    build_dir = File.join(config_path($build_dir, config), name)
     mkdir_p build_dir
     return build_dir
 end
 
-def cmake_build (t, extra_defs = {}, extra_args = [])
+def cmake_build (name, config, extra_defs = {}, extra_args = [])
 
-    source_dir = File.expand_path(t.name)
+    def cmake_build_type (config)
+        return {
+            "debug"          => "Debug",
+            "release"        => "Release",
+            "relwithdebinfo" => "RelWithDebInfo",
+            "minsizerel"     => "MinSizeRel",
+        } [config]
+    end
 
-    cd make_build_dir t.name do
-        cmake_args = [    
+    source_dir = File.expand_path(name)
+
+    cd make_build_dir name, config do
+        cmake_args = [
             "-DCMAKE_GENERATOR:STRING=#{$cmake_gen}",
-            "-DCMAKE_BUILD_TYPE:STRING=Release",
-            "-DCMAKE_INSTALL_PREFIX:PATH=#{$stage_dir}",
-            "-DCMAKE_PREFIX_PATH:PATH=#{$stage_dir}",
-            "-DOUTPUT_DIRECTORY:PATH=#{$output_dir}",
-            "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=#{$output_dir}/bin",
-            "-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=#{$output_dir}/lib",
-            "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=#{$output_dir}/lib",
+            "-DCMAKE_BUILD_TYPE:STRING=#{cmake_build_type(config)}",
+            "-DCMAKE_INSTALL_PREFIX:PATH=#{config_path($stage_dir,config)}",
+            "-DCMAKE_PREFIX_PATH:PATH=#{config_path($stage_dir, config)}",
+            "-DOUTPUT_DIRECTORY:PATH=#{config_path($output_dir, config)}",
+            "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=#{config_path($output_dir,config)}/bin",
+            "-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=#{config_path($output_dir,config)}/lib",
+            "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=#{config_path($output_dir,config)}/lib",
             "-DCMAKE_INSTALL_NAME_DIR:STRING=@loader_path/../lib",
             "-DCMAKE_INSTALL_RPATH:STRING=\$ORIGIN/../lib",
             "-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON"
         ]
 
-        extra_defs.each do | name, type_val |
-            cmake_args << "-D#{name}:#{type_val[0]}=#{type_val[1]}"
+        extra_defs.each do | def_name, def_type_val |
+            cmake_args << "-D#{def_name}:#{def_type_val[0]}=#{config_val(def_type_val[1], config)}"
         end
 
         extra_args.each do | arg |
@@ -102,48 +145,88 @@ end
 
 #-------------------------------------------------------------------------------
 
-task :zlib         => [ :init,                    ] do | t | cmake_build t end
+CONFIGS.each do | config |
+    task config_symbol(:init, config) do
+        mkdir_p config_path($stage_dir, config)
+        mkdir_p config_path($output_dir, config)
+        mkdir_p config_path($build_dir, config)
+    end
+end
 
-task :portaudio    => [ :init,                    ] do | t | cmake_build t end
+CONFIGS.each do | config |
+    task config_symbol(:pack, config) do
+        cd config_path($stage_dir, config) do
+            # FIXME: Package stage contents.
+        end
+    end
+end
 
-task :vectorial    => [ :init,                    ] do | t | cmake_build t end
+def custom_task (sym, deps = [], &blk)
+    name = sym.to_s
+    CONFIGS.each do | config |
+        t = task config_symbol(name, config) => config_deps(deps, config) do | task, args | blk.call(name, config) end
+    end
+    task sym => [ config_symbol(name, DEFAULT_CONFIG) ]
+end
 
-task :jpeg         => [ :init,                    ] do | t | cmake_build t end
+def cmake_task (sym, deps = [], extra_defs = {}, extra_args = [])
+    custom_task sym, deps do | name, config | cmake_build name, config, extra_defs, extra_args end
+end
 
-task :png          => [ :init,                    ] do | t | cmake_build t end
+def all_tasks (syms)
+    CONFIGS.each do | config |
+        task config.intern => config_symbol(:init, config)
+        syms.each do | sym |
+            task config.intern => config_symbol(sym, config)
+        end
+        task config.intern => config_symbol(:pack, config)
+    end
+    task :init => config_symbol(:init, DEFAULT_CONFIG)
+    task :pack => config_symbol(:pack, DEFAULT_CONFIG)
+    task :default => DEFAULT_CONFIG.intern
+end
 
-task :usb          => [ :init,                    ] do | t | cmake_build t end
+#===============================================================================
 
-task :openni       => [ :init, :jpeg, :usb,       ] do | t | cmake_build t, {
+cmake_task :zlib
+
+cmake_task :portaudio
+
+cmake_task :vectorial
+
+cmake_task :jpeg
+
+cmake_task :png
+
+cmake_task :usb
+
+cmake_task :openni, [ :jpeg, :usb, ], {
     'OPENNI_BUILD_SAMPLES' => [ BOOL, ON ],
-} end
+}
 
-task :primesensor   => [ :init, :openni,           ] do | t | cmake_build t end
+cmake_task :primesensor,   [ :openni ]
 
-task :sensorkinect  => [ :init, :openni,           ] do | t | cmake_build t end
+cmake_task :sensorkinect,  [ :openni ]
 
-task :sensorkin4win => [ :init, :openni,           ] do | t | cmake_build t end
+cmake_task :sensorkin4win, [ :openni ]
 
-task :nite         => [ :init, :openni,           ] do | t | cmake_build t end
+cmake_task :nite,          [ :openni ]
 
-task :eigen        => [ :init,                    ] do | t | cmake_build t end
+cmake_task :eigen
 
-task :flann        => [ :init,                    ] do | t | cmake_build t, {
+cmake_task :flann, [], {
     'BUILD_CUDA_LIB'        => [ BOOL, OFF ],
     'BUILD_PYTHON_BINDINGS' => [ BOOL, OFF ],
     'BUILD_MATLAB_BINDINGS' => [ BOOL, OFF ],
 }
-end
-
-task :qhull        => [ :init,                    ] do | t | cmake_build t, {
-    'CMAKE_C_FLAGS'         => [ STRING, '-fPIC' ], # FIXME: Linux-x86_64 only.
-    'CMAKE_CXX_FLAGS'       => [ STRING, '-fPIC' ], # FIXME: Likewise.
+cmake_task :qhull, [], {
+    'CMAKE_C_FLAGS'   => [ STRING, '-fPIC' ], # FIXME: Linux-x86_64 only.
+    'CMAKE_CXX_FLAGS' => [ STRING, '-fPIC' ], # FIXME: Likewise.
 }
-end
 
-task :boost => [ :init, ] do | t |
-    source_dir = File.expand_path(t.name)
-    build_dir = make_build_dir t.name
+custom_task :boost do | name, config |
+    source_dir = File.expand_path(name)
+    build_dir = make_build_dir name, config
 
     if UNIX then
         bootstrap = './bootstrap.sh'
@@ -155,40 +238,56 @@ task :boost => [ :init, ] do | t |
         def path (str) return str.gsub('/', '\\') end
     end
 
+    def boost_build_variant (config)
+        return {
+            "debug"          => "debug",
+            "release"        => "release",
+            "relwithdebinfo" => "release",
+            "minsizerel"     => "release",
+        } [config]
+    end
+
     cd source_dir do
         sh bootstrap
         ENV['NO_COMPRESSION'] = '1'
         # FIXME: -fPIC is for linux-x86_64 only.
         # FIXME: Address model should not be hard-coded.
         # 'architecture=x86',
-        sh b2, "--prefix=#{path($stage_dir)}", "--build-dir=#{path(build_dir)}", '--without-python', 'cxxflags=-fPIC', 'address-model=64', 'link=static', 'threading=multi', 'install'
+        sh b2,
+            "--prefix=#{path(config_path($stage_dir, config))}",
+            "--build-dir=#{path(build_dir)}",
+            '--without-python',
+            'cxxflags=-fPIC',
+            'address-model=64',
+            'link=static',
+            'threading=multi',
+            "variant=#{boost_build_variant(config)}",
+            'install'
     end
 end
 
 # FIXME: -fPIC is for linux-x86_64 only.
-task :vtk => [ :init, ] do | t | cmake_build t, {
+cmake_task :vtk, [], {
     'CMAKE_VERBOSE_MAKEFILE' => [ BOOL, ON ],
     'CMAKE_C_FLAGS'   => [ STRING, '-fPIC' ], # FIXME: Linux-x86_64 only.
     'CMAKE_CXX_FLAGS' => [ STRING, '-fPIC' ], # FIXME: Likewise.
     'BUILD_TESTING' => [ BOOL, OFF ],
 }
-end
 
-task :pcl          => [ :init, :boost, :eigen, :flann, :png, :openni, :qhull, :vtk ] do | t | cmake_build t, {
+cmake_task :pcl, [ :boost, :eigen, :flann, :png, :openni, :qhull, :vtk ], {
     'BUILD_apps'              => [ BOOL, OFF ],
     'BUILD_simulation'        => [ BOOL, OFF ],
-    'BOOST_ROOT'              => [ PATH, $stage_dir ],
+    'BOOST_ROOT'              => [ PATH, STAGE_DIR ],
     'Boost_NO_SYSTEM_PATHS'   => [ BOOL, ON ],
-    'FLANN_ROOT'              => [ PATH, $stage_dir ],
+    'FLANN_ROOT'              => [ PATH, STAGE_DIR ],
     'PCL_SHARED_LIBS'         => [ BOOL, OFF ],
     'BUILD_TESTS'             => [ BOOL, OFF ],
     'CMAKE_C_FLAGS'           => [ STRING, '-fPIC' ], # FIXME: Linux-x86_64 only.
     'CMAKE_CXX_FLAGS'         => [ STRING, '-fPIC' ], # FIXME: Likewise.
 }
 #, [ '--trace' ]
-end
 
-task :opencv       => [ :init, :png                ] do | t | cmake_build t, {
+cmake_task :opencv, [ :png ], {
     'BUILD_SHARED_LIBS'     => [ BOOL, OFF ],
     'WITH_CUDA'             => [ BOOL, OFF ],
     'BUILD_TESTS'           => [ BOOL, ON  ],
@@ -197,41 +296,43 @@ task :opencv       => [ :init, :png                ] do | t | cmake_build t, {
     'CMAKE_C_FLAGS'         => [ STRING, '-fPIC' ], # FIXME: Linux-x86_64 only.
     'CMAKE_CXX_FLAGS'       => [ STRING, '-fPIC' ], # FIXME: Likewise.
 }
-end
 
-task :qt => [ :init, ] do | t |  
-        source_dir = File.expand_path(t.name)
-        build_dir = make_build_dir t.name
+# FIXME: Properly dispatch on actual config.
+custom_task :qt do | name, config |
+    source_dir = File.expand_path(name)
+    build_dir = make_build_dir name, config
     if WIN32 then
         cd build_dir do
             # FIXME: Do 32/64 bit dispatch.
+            # FIXME: Properly install products in stage.
             sh "#{source_dir}/build-qt-windows-msvc10.cmd", 'amd64'
-        end    
+        end
     else
         cd build_dir do
             # FIXME: Do 32/64 bit dispatch.
             sh "#{source_dir}/build-qt-unix-make.sh", $stage_dir
-        end    
+        end
     end
 end
 
-task :ruby => [ :init, ] do | t |
-    source_dir = File.expand_path(t.name)
-    build_dir = make_build_dir t.name
+# FIXME: Properly dispatch on actual config.
+custom_task :ruby do | name, config |
+    source_dir = File.expand_path(name)
+    build_dir = make_build_dir name, config
     ENV['PATH'] = "#{ENV['PATH']};#{path(source_dir)}\\win32\\bin"
     if WIN32 then
         cd build_dir do
             sh "#{source_dir}/win32/configure.bat"
             edit_file("#{build_dir}/Makefile", /^RT = msvcr\d+/, 'RT = msvcrt')
             sh 'nmake'
-            sh 'nmake', "DESTDIR=#{$stage_dir}", 'install', 'install-lib'
+            sh 'nmake', "DESTDIR=#{config_path($stage_dir, config)}", 'install', 'install-lib'
         end
     else
         cd source_dir do
              sh 'autoconf'
         end
         cd build_dir do
-             sh "#{source_dir}/configure", "--prefix=#{$stage_dir}"
+             sh "#{source_dir}/configure", "--prefix=#{config_path($stage_dir, config)}"
              sh 'make'
              sh 'make', 'install', 'install-lib'
         end
@@ -240,9 +341,7 @@ end
 
 #-------------------------------------------------------------------------------
 
-task :default => [
-    :init,
-
+all_tasks [
     :zlib,
     :portaudio,
     :png,
@@ -258,6 +357,4 @@ task :default => [
     :boost,
     :qt,
     :ruby,
-
-    :pack,
 ]
