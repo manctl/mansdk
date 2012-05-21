@@ -55,3 +55,6 @@
 [submodule "vectorial"]
 	path = vectorial
 	url = git@github.com:manctl/vectorial
+[submodule "portaudio"]
+	path = portaudio
+	url = git@bitbucket.org:manctl/portaudio
