@@ -104,6 +104,8 @@ end
 
 task :zlib         => [ :init,                    ] do | t | cmake_build t end
 
+task :portaudio    => [ :init,                    ] do | t | cmake_build t end
+
 task :vectorial    => [ :init,                    ] do | t | cmake_build t end
 
 task :jpeg         => [ :init,                    ] do | t | cmake_build t end
@@ -242,6 +244,7 @@ task :default => [
     :init,
 
     :zlib,
+    :portaudio,
     :png,
     :vectorial,
     :jpeg,
