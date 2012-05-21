@@ -219,7 +219,9 @@ cmake_task :flann, [], {
     'BUILD_PYTHON_BINDINGS' => [ BOOL, OFF ],
     'BUILD_MATLAB_BINDINGS' => [ BOOL, OFF ],
     'BUILD_C_BINDINGS'      => [ BOOL, OFF ],
-    'CMAKE_CXX_FLAGS'       => [ STRING, "/bigobj" ], # FIXME: Windows only.
+    'BUILD_C_BINDINGS'      => [ BOOL, OFF ],
+}.tap { | flags |
+    flags['CMAKE_CXX_FLAGS'] = [ STRING, "/bigobj" ] if WIN32
 }
 
 cmake_task :qhull, [], {
