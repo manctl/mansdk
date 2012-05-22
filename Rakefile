@@ -227,7 +227,10 @@ cmake_task :vectorial
 
 cmake_task :jpeg
 
-cmake_task :png
+cmake_task :png, [ :zlib ], {
+    'PNG_NO_CONSOLE_IO' => [ BOOL, OFF ],
+    'PNG_NO_STDIO'     => [ BOOL, OFF ],
+}
 
 cmake_task :usb
 
