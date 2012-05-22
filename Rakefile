@@ -26,9 +26,15 @@ CONFIGS=[ "debug", "release", "relwithdebinfo", "minsizerel" ]
 
 DEFAULT_CONFIG="release"
 
- $build_dir = File.expand_path(BUILD)
-$output_dir = File.expand_path(OUTPUT)
- $stage_dir = File.expand_path(STAGE)
+PREFIX=ENV['PREFIX'] || nil
+
+def prefixed (path)
+    return PREFIX ? File.join(PREFIX, path) : path
+end
+
+ $build_dir = File.expand_path(prefixed(ENV['BUILD_DIR' ] || BUILD))
+$output_dir = File.expand_path(prefixed(ENV['OUTPUT_DIR'] || OUTPUT))
+ $stage_dir = File.expand_path(prefixed(ENV['STAGE_DIR' ] || STAGE))
 
 #-------------------------------------------------------------------------------
 
