@@ -320,6 +320,7 @@ cmake_task :pcl, [ :boost, :eigen, :flann, :png, :openni, :qhull, :vtk ], {
 
 cmake_task :opencv, [ :png ], {
     'BUILD_SHARED_LIBS'     => [ BOOL, OFF ],
+    'BUILD_WITH_STATIC_CRT' => [ BOOL, OFF ],
     'WITH_CUDA'             => [ BOOL, OFF ],
     'BUILD_TESTS'           => [ BOOL, ON  ],
     'WITH_FFMPEG'           => [ BOOL, OFF ],
