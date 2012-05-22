@@ -1,3 +1,11 @@
+
+def edit_file (path, pattern, replacement)
+    text = File.read(path).gsub(pattern, replacement)
+    File.open(path, "w") { |file| file << text }
+end
+
+#-------------------------------------------------------------------------------
+
  BUILD='build'
 OUTPUT='output'
  STAGE='stage'
@@ -24,27 +32,36 @@ $output_dir = File.expand_path(OUTPUT)
 
 #-------------------------------------------------------------------------------
 
-def edit_file (path, pattern, replacement)
-    text = File.read(path).gsub(pattern, replacement)
-    File.open(path, "w") { |file| file << text }
+ WIN32=false
+MACOSX=false
+ LINUX=false
+  UNIX=false
+
+case RUBY_PLATFORM
+    when /win32|mingw32/ then
+        WIN32=true
+    when /linux/ then
+        LINUX=true
+        UNIX=true
+    when /darwin/ then
+        MACOSX=true
+        UNIX=true
+    else
+        raise "Unknown Platform"
 end
 
-#-------------------------------------------------------------------------------
-
-if RUBY_PLATFORM =~ /win32|mingw32/
-    WIN32=true
-    UNIX=false
+if WIN32
     $cmake_gen = 'NMake Makefiles'
     $make_cmd  = 'nmake'
     $make_options = []
     def path (str) return str.gsub('/', '\\') end
-else
-    WIN32=false
-    UNIX=true
+elsif UNIX
     $cmake_gen = 'Unix Makefiles'
     $make_cmd  = 'make'
     $make_options = [] # ['-j', '4']
     def path (str) return str end
+else
+    raise "Unknown System"
 end
 
 #-------------------------------------------------------------------------------
@@ -224,9 +241,9 @@ cmake_task :flann, [], {
     flags['CMAKE_CXX_FLAGS'] = [ STRING, "/bigobj" ] if WIN32
 }
 
-cmake_task :qhull, [], {
-    'CMAKE_C_FLAGS'   => [ STRING, '-fPIC' ], # FIXME: Linux-x86_64 only.
-    'CMAKE_CXX_FLAGS' => [ STRING, '-fPIC' ], # FIXME: Likewise.
+cmake_task :qhull, [], {}.tap { | flags |
+    flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
+    flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
 }
 
 custom_task :boost do | name, config |
@@ -255,28 +272,27 @@ custom_task :boost do | name, config |
     cd source_dir do
         sh bootstrap
         ENV['NO_COMPRESSION'] = '1'
-        # FIXME: -fPIC is for linux-x86_64 only.
-        # FIXME: Address model should not be hard-coded.
-        # 'architecture=x86',
-        sh b2,
+        b2_args = [
             "--prefix=#{path(config_path($stage_dir, config))}",
             "--build-dir=#{path(build_dir)}",
             '--without-python',
-            'cxxflags=-fPIC',
-            'address-model=64',
+            'address-model=64', # FIXME: Address model should not be hard-coded.
             'link=static',
             'threading=multi',
-            "variant=#{boost_build_variant(config)}",
-            'install'
+            "variant=#{boost_build_variant(config)}",       
+        ]
+        b2_args << 'cxxflags=-fPIC' if LINUX # FIXME: x86_64 only.
+        b2_args << 'install'
+        sh b2, *b2_args
     end
 end
 
-# FIXME: -fPIC is for linux-x86_64 only.
 cmake_task :vtk, [], {
     'CMAKE_VERBOSE_MAKEFILE' => [ BOOL, ON ],
-    'CMAKE_C_FLAGS'   => [ STRING, '-fPIC' ], # FIXME: Linux-x86_64 only.
-    'CMAKE_CXX_FLAGS' => [ STRING, '-fPIC' ], # FIXME: Likewise.
     'BUILD_TESTING' => [ BOOL, OFF ],
+}.tap { | flags |
+    flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
+    flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
 }
 
 cmake_task :pcl, [ :boost, :eigen, :flann, :png, :openni, :qhull, :vtk ], {
@@ -287,9 +303,11 @@ cmake_task :pcl, [ :boost, :eigen, :flann, :png, :openni, :qhull, :vtk ], {
     'FLANN_ROOT'              => [ PATH, STAGE_DIR ],
     'PCL_SHARED_LIBS'         => [ BOOL, OFF ],
     'BUILD_TESTS'             => [ BOOL, OFF ],
-    'CMAKE_C_FLAGS'           => [ STRING, '-fPIC' ], # FIXME: Linux-x86_64 only.
-    'CMAKE_CXX_FLAGS'         => [ STRING, '-fPIC' ], # FIXME: Likewise.
+}.tap { | flags |
+    flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
+    flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
 }
+
 #, [ '--trace' ]
 
 cmake_task :opencv, [ :png ], {
@@ -298,8 +316,9 @@ cmake_task :opencv, [ :png ], {
     'BUILD_TESTS'           => [ BOOL, ON  ],
     'WITH_FFMPEG'           => [ BOOL, OFF ],
     'WITH_EIGEN'            => [ BOOL, OFF ],
-    'CMAKE_C_FLAGS'         => [ STRING, '-fPIC' ], # FIXME: Linux-x86_64 only.
-    'CMAKE_CXX_FLAGS'       => [ STRING, '-fPIC' ], # FIXME: Likewise.
+}.tap { | flags |
+    flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
+    flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
 }
 
 # FIXME: Properly dispatch on actual config.
@@ -321,6 +340,7 @@ custom_task :qt do | name, config |
 end
 
 # FIXME: Properly dispatch on actual config.
+# FIXME: Ruby does not compile on 64 bit target architectures.
 custom_task :ruby do | name, config |
     source_dir = File.expand_path(name)
     build_dir = make_build_dir name, config
