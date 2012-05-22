@@ -340,16 +340,26 @@ cmake_task :opencv, [ :png ], {
 custom_task :qt do | name, config |
     source_dir = File.expand_path(name)
     build_dir = make_build_dir name, config
+    
+    def qt_config (config)
+        return {
+            "debug"          => "debug",
+            "release"        => "release",
+            "relwithdebinfo" => "release",
+            "minsizerel"     => "release",
+        } [config]
+    end
+    
     if WIN32 then
         cd build_dir do
             # FIXME: Do 32/64 bit dispatch.
             # FIXME: Properly install products in stage.
-            sh "#{source_dir}/build-qt-windows-msvc10.cmd", 'amd64'
+            sh "#{source_dir}/build-qt-windows-msvc10.cmd", 'amd64', qt_config($config)
         end
     else
         cd build_dir do
             # FIXME: Do 32/64 bit dispatch.
-            sh "#{source_dir}/build-qt-unix-make.sh", $stage_dir
+            sh "#{source_dir}/build-qt-unix-make.sh", 'amd64', qt_config($config), $stage_dir
         end
     end
 end
