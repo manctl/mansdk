@@ -27,6 +27,7 @@ CONFIGS=[ "debug", "release", "relwithdebinfo", "minsizerel" ]
 DEFAULT_CONFIG="release"
 
 PREFIX=ENV['PREFIX'] || nil
+VERBOSE=ENV['VERBOSE'] || "OFF"
 
 def prefixed (path)
     return PREFIX ? File.join(PREFIX, path) : path
@@ -131,7 +132,7 @@ def cmake_build (name, config, extra_defs = {}, extra_args = [])
             "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=#{config_path($output_dir,config)}/lib",
             "-DCMAKE_INSTALL_NAME_DIR:STRING=@loader_path/../lib",
             "-DCMAKE_INSTALL_RPATH:STRING=\$ORIGIN/../lib",
-            "-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON"
+            "-DCMAKE_VERBOSE_MAKEFILE:BOOL=#{VERBOSE}"
         ]
 
         extra_defs.each do | def_name, def_type_val |
