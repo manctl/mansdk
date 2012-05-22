@@ -130,10 +130,11 @@ def cmake_build (name, config, extra_defs = {}, extra_args = [])
             "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=#{config_path($output_dir,config)}/bin",
             "-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=#{config_path($output_dir,config)}/lib",
             "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=#{config_path($output_dir,config)}/lib",
-            "-DCMAKE_INSTALL_NAME_DIR:STRING=@loader_path/../lib",
-            "-DCMAKE_INSTALL_RPATH:STRING=\$ORIGIN/../lib",
             "-DCMAKE_VERBOSE_MAKEFILE:BOOL=#{VERBOSE}"
         ]
+
+        cmake_args << "-DCMAKE_INSTALL_NAME_DIR:STRING=@loader_path/../lib" if MACOSX
+        cmake_args << "-DCMAKE_INSTALL_RPATH:STRING=\$ORIGIN/../lib" if LINUX
 
         extra_defs.each do | def_name, def_type_val |
             cmake_args << "-D#{def_name}:#{def_type_val[0]}=#{config_val(def_type_val[1], config)}"
