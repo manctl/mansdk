@@ -32,20 +32,22 @@ $output_dir = File.expand_path(OUTPUT)
 
 #-------------------------------------------------------------------------------
 
- WIN32=false
-MACOSX=false
- LINUX=false
-  UNIX=false
-
 case RUBY_PLATFORM
     when /win32|mingw32/ then
-        WIN32=true
+         WIN32=true
+        MACOSX=false
+         LINUX=false
+          UNIX=false
     when /linux/ then
-        LINUX=true
-        UNIX=true
+         WIN32=false
+        MACOSX=false
+         LINUX=true
+          UNIX=true
     when /darwin/ then
+         WIN32=false
         MACOSX=true
-        UNIX=true
+         LINUX=false
+          UNIX=true
     else
         raise "Unknown Platform"
 end
