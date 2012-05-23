@@ -1,3 +1,12 @@
+def write_file (path, contents)
+    file = File.new(path, "w")
+    file << contents
+    file.close
+end
+
+def write_file_in (dir, path, contents)
+    write_file File.join(dir, path), contents
+end
 
 def edit_file (path, pattern, replacement)
     text = File.read(path).gsub(pattern, replacement)
@@ -39,6 +48,61 @@ $output_dir = File.expand_path(prefixed(ENV['OUTPUT_DIR'] || OUTPUT))
 
 #-------------------------------------------------------------------------------
 
+PLATFORM_OS_CPP = <<EOF
+#include <iostream>
+
+// See: http://poshlib.hookatooka.com/poshlib/trac.cgi.
+static const char os [] =
+#if   defined(_WIN32) || defined(_WIN64) || defined(__WINDOWS__)
+    "windows"
+#elif defined(__linux__) || defined(__linux) || defined(linux)
+    "linux"
+#elif defined(__APPLE__) && defined(__MACH__)
+    "macosx"
+#else
+    "unknown"
+#endif
+;
+
+int
+main (int argc, char* argv[])
+{
+    std::cout << os << std::endl;
+}
+EOF
+
+PLATFORM_ARCH_CPP = <<EOF
+#include <iostream>
+
+// See http://predef.sourceforge.net/prearch.html.
+static const char arch [] =
+#if   defined(_M_IX86) || defined(__i386__) || defined(__X86__) || defined(__I86__)
+    "x86"
+#elif defined(__amd64__) || defined(__amd64) || defined(__x86_64__) || defined(__x86_64) || defined(_M_X64)
+    "x64"
+#elif defined(_M_PPC) || defined(__ppc__) || defined(__powerpc__) || defined(__POWERPC__)
+    "ppc"
+#else
+    "unknown"
+#endif
+;
+
+int
+main (int argc, char* argv[])
+{
+    std::cout << arch << std::endl;
+}
+EOF
+
+PLATFORM_CMAKELISTS_TXT = <<EOF
+cmake_minimum_required(VERSION 2.8)
+project(platform)
+add_executable(platform-os   platform-os.cpp)
+add_executable(platform-arch platform-arch.cpp)
+install(TARGETS platform-os platform-arch DESTINATION bin)
+EOF
+
+# FIXME: Move these inside the init task and let regular tasks depend on PLATFORM_OS & PLATFORM_ARCH.
 case RUBY_PLATFORM
     when /win32|mingw32/ then
          WIN32=true
@@ -59,6 +123,7 @@ case RUBY_PLATFORM
         raise "Unknown Platform"
 end
 
+# FIXME: Likewise.
 if WIN32
     $cmake_gen = 'NMake Makefiles'
     $make_cmd  = 'nmake'
@@ -107,16 +172,16 @@ def make_build_dir (name, config)
     return build_dir
 end
 
-def cmake_build (name, config, extra_defs = {}, extra_args = [])
+def cmake_build_type (config)
+    return {
+        "debug"          => "Debug",
+        "release"        => "Release",
+        "relwithdebinfo" => "RelWithDebInfo",
+        "minsizerel"     => "MinSizeRel",
+    } [config]
+end
 
-    def cmake_build_type (config)
-        return {
-            "debug"          => "Debug",
-            "release"        => "Release",
-            "relwithdebinfo" => "RelWithDebInfo",
-            "minsizerel"     => "MinSizeRel",
-        } [config]
-    end
+def cmake_build (name, config, extra_defs = {}, extra_args = [])
 
     source_dir = File.expand_path(name)
 
@@ -181,6 +246,30 @@ CONFIGS.each do | config |
         mkdir_p config_path($stage_dir, config)
         mkdir_p config_path($output_dir, config)
         mkdir_p config_path($build_dir, config)
+
+        source_dir = make_build_dir 'platform', config
+        build_dir = File.join(source_dir, 'build')
+
+        write_file_in source_dir, 'platform-os.cpp',   PLATFORM_OS_CPP
+        write_file_in source_dir, 'platform-arch.cpp', PLATFORM_ARCH_CPP
+        write_file_in source_dir, 'CMakeLists.txt',    PLATFORM_CMAKELISTS_TXT
+
+        mkdir_p build_dir
+
+        stage = config_path($stage_dir,config)
+        cd build_dir do
+            sh 'cmake',
+                "-G#{$cmake_gen}",
+                "-DCMAKE_BUILD_TYPE:STRING=#{cmake_build_type(config)}",
+                "-DCMAKE_INSTALL_PREFIX:PATH=#{stage}",
+                source_dir
+            sh $make_cmd
+            sh $make_cmd, 'install'
+        end
+
+        stage_bin = File.join(stage, 'bin')
+        PLATFORM_OS=`#{File.join(stage_bin, 'platform-os')}`
+        PLATFORM_ARCH=`#{File.join(stage_bin, 'platform-arch')}`
     end
 end
 
@@ -297,7 +386,7 @@ custom_task :boost do | name, config |
             'address-model=64', # FIXME: Address model should not be hard-coded.
             'link=static',
             'threading=multi',
-            "variant=#{boost_build_variant(config)}",       
+            "variant=#{boost_build_variant(config)}",
         ]
         b2_args << 'cxxflags=-fPIC' if LINUX # FIXME: x86_64 only.
         b2_args << 'install'
@@ -344,7 +433,7 @@ cmake_task :opencv, [ :png ], {
 custom_task :qt do | name, config |
     source_dir = File.expand_path(name)
     build_dir = make_build_dir name, config
-    
+
     def qt_config (config)
         return {
             "debug"          => "debug",
@@ -353,7 +442,7 @@ custom_task :qt do | name, config |
             "minsizerel"     => "release",
         } [config]
     end
-    
+
     if WIN32 then
         cd build_dir do
             # FIXME: Do 32/64 bit dispatch.
@@ -370,25 +459,28 @@ end
 
 # FIXME: Properly dispatch on actual config.
 # FIXME: Ruby does not compile on 64 bit target architectures.
+
 custom_task :ruby do | name, config |
-    source_dir = File.expand_path(name)
-    build_dir = make_build_dir name, config
-    ENV['PATH'] = "#{ENV['PATH']};#{path(source_dir)}\\win32\\bin"
-    if WIN32 then
-        cd build_dir do
-            sh "#{source_dir}/win32/configure.bat"
-            edit_file("#{build_dir}/Makefile", /^RT = msvcr\d+/, 'RT = msvcrt')
-            sh 'nmake'
-            sh 'nmake', "DESTDIR=#{config_path($stage_dir, config)}", 'install', 'install-lib'
-        end
-    else
-        cd source_dir do
-             sh 'autoconf'
-        end
-        cd build_dir do
-             sh "#{source_dir}/configure", "--prefix=#{config_path($stage_dir, config)}"
-             sh 'make'
-             sh 'make', 'install', 'install-lib'
+    if PLATFORM_ARCH == 'x86'
+        source_dir = File.expand_path(name)
+        build_dir = make_build_dir name, config
+        ENV['PATH'] = "#{ENV['PATH']};#{path(source_dir)}\\win32\\bin"
+        if WIN32 then
+            cd build_dir do
+                sh "#{source_dir}/win32/configure.bat"
+                edit_file("#{build_dir}/Makefile", /^RT = msvcr\d+/, 'RT = msvcrt')
+                sh 'nmake'
+                sh 'nmake', "DESTDIR=#{config_path($stage_dir, config)}", 'install', 'install-lib'
+            end
+        else
+            cd source_dir do
+                 sh 'autoconf'
+            end
+            cd build_dir do
+                 sh "#{source_dir}/configure", "--prefix=#{config_path($stage_dir, config)}"
+                 sh 'make'
+                 sh 'make', 'install', 'install-lib'
+            end
         end
     end
 end
