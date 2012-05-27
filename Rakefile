@@ -33,6 +33,8 @@ OUTPUT_DIR="__OUTPUT_DIR__"
 
 CONFIGS=[ "debug", "release", "relwithdebinfo", "minsizerel" ]
 
+# FIXME: I do not understand how to change the build type
+# when a target is present otherwise.
 DEFAULT_CONFIG=ENV['CONFIG'] || "relwithdebinfo"
 
 PREFIX=ENV['PREFIX'] || nil
@@ -133,7 +135,7 @@ if WIN32
 elsif UNIX
     $cmake_gen = 'Unix Makefiles'
     $make_cmd  = 'make'
-    $make_options = [] # ['-j', '4']
+    $make_options = ['-j', '4']
     def path (str) return str end
     USE_STATIC_LIBRARIES=true
 else
@@ -310,7 +312,12 @@ end
 
 #===============================================================================
 
-cmake_task :zlib
+cmake_task :zlib, [], {
+    'BUILD_SHARED_LIBS'   => [ BOOL, (not USE_STATIC_LIBRARIES) ],
+ }.tap { | flags |
+    flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
+    flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
+}
 
 cmake_task :portaudio, [], {
     'PA_DLL_LINK_WITH_STATIC_RUNTIME' => [ BOOL, OFF ],
@@ -360,6 +367,12 @@ cmake_task :qhull, [], {}.tap { | flags |
 custom_task :boost do | name, config |
     source_dir = File.expand_path(name)
     build_dir = make_build_dir name, config
+    stage_dir = config_path($stage_dir,config)
+
+    # FIXME: quick hack to avoid running boost every time.
+    if File.exists? "#{stage_dir}/include/boost" then
+        next
+    end
 
     if UNIX then
         bootstrap = './bootstrap.sh'
@@ -509,6 +522,7 @@ all_tasks [
     :pcl,
     :opencv,
     :boost,
-    :qt,
     :ruby,
-]
+].tap{ |list|
+    list << [ :qt ] if WIN32
+}
