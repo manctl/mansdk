@@ -313,7 +313,7 @@ end
 cmake_task :zlib
 
 cmake_task :portaudio, [], {
-    'PA_DLL_LINK_WITH_STATIC_RUNTIME' => [ BOOL, OFF],
+    'PA_DLL_LINK_WITH_STATIC_RUNTIME' => [ BOOL, OFF ],
 }
 
 cmake_task :vectorial
@@ -430,7 +430,12 @@ cmake_task :opencv, [ :png ], {
     'BUILD_TESTS'           => [ BOOL, ON  ],
     'WITH_FFMPEG'           => [ BOOL, OFF ],
     'WITH_EIGEN'            => [ BOOL, OFF ],
-}, ["-DCMAKE_GENERATOR:STRING='Visual Studio 10 Win64'"]
+}.tap { | flags |
+    flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
+    flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
+},
+# FIXME: How can this work in a fully automated build?
+["-DCMAKE_GENERATOR:STRING='Visual Studio 10 Win64'"]
 
 # FIXME: Properly dispatch on actual config.
 custom_task :qt do | name, config |
