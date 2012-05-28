@@ -455,7 +455,7 @@ custom_task :qt do | name, config |
     else
         cd build_dir do
             # FIXME: Do 32/64 bit dispatch.
-            sh "#{source_dir}/build-qt-unix-make.sh", 'amd64', qt_config(config), $stage_dir
+            sh "#{source_dir}/build-qt-unix-make.sh", 'amd64', qt_config(config), config_path($stage_dir, config)
         end
     end
 end
