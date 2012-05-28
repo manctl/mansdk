@@ -129,13 +129,13 @@ if WIN32
     $make_cmd  = 'nmake'
     $make_options = []
     def path (str) return str.gsub('/', '\\') end
-	USE_STATIC_LIBRARIES=false
+    USE_STATIC_LIBRARIES=false
 elsif UNIX
     $cmake_gen = 'Unix Makefiles'
     $make_cmd  = 'make'
     $make_options = [] # ['-j', '4']
     def path (str) return str end
-	USE_STATIC_LIBRARIES=true
+    USE_STATIC_LIBRARIES=true
 else
     raise "Unknown System"
 end
@@ -143,7 +143,7 @@ end
 #-------------------------------------------------------------------------------
 
 def config_path (path, config)
-	return "#{path}/#{config}"
+    return "#{path}/#{config}"
 end
 
 def config_symbol (sym, config)
@@ -391,7 +391,7 @@ custom_task :boost do | name, config |
             'threading=multi',
             "variant=#{boost_build_variant(config)}",
         ]
-		b2_args << 'link=static' if USE_STATIC_LIBRARIES
+        b2_args << 'link=static' if USE_STATIC_LIBRARIES
         b2_args << 'cxxflags=-fPIC' if LINUX # FIXME: x86_64 only.
         b2_args << 'install'
         sh b2, *b2_args
@@ -409,8 +409,8 @@ cmake_task :vtk, [], {
 cmake_task :pcl, [ :boost, :eigen, :flann, :png, :openni, :qhull, :vtk ], {
     'BUILD_apps'              => [ BOOL, OFF ],
     'BUILD_simulation'        => [ BOOL, OFF ],
-	'BUILD_GPU'               => [ BOOL, ON ],
-	'BUILD_CUDA'              => [ BOOL, ON ],
+    'BUILD_GPU'               => [ BOOL, ON ],
+    'BUILD_CUDA'              => [ BOOL, ON ],
     'BOOST_ROOT'              => [ PATH, STAGE_DIR ],
     'Boost_NO_SYSTEM_PATHS'   => [ BOOL, ON ],
     'FLANN_ROOT'              => [ PATH, STAGE_DIR ],
