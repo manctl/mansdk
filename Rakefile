@@ -435,7 +435,7 @@ cmake_task :opencv, [ :png ], {
     flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
 },
 # FIXME: How can this work in a fully automated build?
-["-DCMAKE_GENERATOR:STRING='Visual Studio 10 Win64'"]
+[] + (WIN32 ? [ "-DCMAKE_GENERATOR:STRING='Visual Studio 10 Win64'" ] : [])
 
 # FIXME: Properly dispatch on actual config.
 custom_task :qt do | name, config |
