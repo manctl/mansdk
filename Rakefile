@@ -464,17 +464,15 @@ custom_task :qt do | name, config |
         } [config]
     end
 
-    if WIN32 then
-        cd build_dir do
-            # FIXME: Do 32/64 bit dispatch.
-            # FIXME: Properly install products in stage.
-            sh "#{source_dir}/build-qt-windows-msvc10.cmd", 'amd64', qt_config(config)
-        end
-    else
-        cd build_dir do
-            # FIXME: Do 32/64 bit dispatch.
-            sh "#{source_dir}/build-qt-unix-make.sh", 'amd64', qt_config(config), config_path($stage_dir, config)
-        end
+    cd build_dir do
+        # FIXME: Do 32/64 bit dispatch.
+        # FIXME: Properly install products in stage.
+        sh "#{source_dir}/build-qt-windows-msvc10.cmd", 'amd64', qt_config(config)
+    end
+
+    cd build_dir do
+        # FIXME: Do 32/64 bit dispatch.
+        sh "#{source_dir}/build-qt-unix-make.sh", 'amd64', qt_config(config), config_path($stage_dir, config)
     end
 end
 
@@ -523,6 +521,6 @@ all_tasks [
     :opencv,
     :boost,
     :ruby,
-].tap{ |list|
-    list << [ :qt ] if WIN32
+].tap { | tasks |
+    tasks << :qt if WIN32
 }
