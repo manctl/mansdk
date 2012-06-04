@@ -13,6 +13,10 @@ def edit_file (path, pattern, replacement)
     File.open(path, "w") { |file| file << text }
 end
 
+def expand_flags(str)
+    return str.split(' ')
+end
+
 #-------------------------------------------------------------------------------
 
  BUILD='build'
@@ -39,6 +43,7 @@ DEFAULT_CONFIG=ENV['CONFIG'] || "relwithdebinfo"
 
 PREFIX=ENV['PREFIX'] || nil
 VERBOSE=ENV['VERBOSE'] || "OFF"
+MAKE_FLAGS=expand_flags(ENV['MAKE_FLAGS'])
 
 def prefixed (path)
     return PREFIX ? File.join(PREFIX, path) : path
@@ -129,13 +134,13 @@ end
 if WIN32
     $cmake_gen = 'NMake Makefiles'
     $make_cmd  = 'nmake'
-    $make_options = []
+    $make_flags = [] + MAKE_FLAGS
     def path (str) return str.gsub('/', '\\') end
     USE_STATIC_LIBRARIES=false
 elsif UNIX
     $cmake_gen = 'Unix Makefiles'
     $make_cmd  = 'make'
-    $make_options = ['-j', '4']
+    $make_flags = [] + MAKE_FLAGS
     def path (str) return str end
     USE_STATIC_LIBRARIES=true
 else
@@ -220,7 +225,7 @@ def cmake_build (name, config, extra_defs = {}, extra_args = [])
         cmake_args << source_dir
 
         sh 'cmake', *cmake_args
-        sh $make_cmd, *$make_options
+        sh $make_cmd, *$make_flags
         sh $make_cmd, 'install'
     end
 end
