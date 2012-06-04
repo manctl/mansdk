@@ -43,7 +43,7 @@ DEFAULT_CONFIG=ENV['CONFIG'] || "relwithdebinfo"
 
 PREFIX=ENV['PREFIX'] || nil
 VERBOSE=ENV['VERBOSE'] || "OFF"
-MAKE_FLAGS=expand_flags(ENV['MAKE_FLAGS'])
+MAKE_FLAGS=expand_flags(ENV['MAKE_FLAGS'] || '')
 
 def prefixed (path)
     return PREFIX ? File.join(PREFIX, path) : path
