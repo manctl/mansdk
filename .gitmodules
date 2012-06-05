@@ -58,3 +58,6 @@
 [submodule "portaudio"]
 	path = portaudio
 	url = git@bitbucket.org:manctl/portaudio
+[submodule "qt3d"]
+	path = qt3d
+	url = git@bitbucket.org:manctl/qt3d.git

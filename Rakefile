@@ -511,6 +511,20 @@ custom_task :ruby do | name, config |
     end
 end
 
+custom_task :qt3d, [ :qt ] do | name, config |
+    source_dir = File.expand_path(name)
+    build_dir = make_build_dir name, config
+    stage_dir = config_path( $stage_dir, config)
+    qmake_path  = "#{stage_dir}/bin/qmake"
+    project_path = "#{source_dir}/qt3d.pro" 
+    cd build_dir do
+        # FIXME: Honor build configuration.
+        sh qmake_path, "PREFIX=#{stage_dir}", project_path
+        sh $make_cmd, *$make_flags
+        sh $make_cmd, 'install'
+    end
+end
+
 #-------------------------------------------------------------------------------
 
 all_tasks [
