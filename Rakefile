@@ -443,7 +443,7 @@ cmake_task :pcl, [ :boost, :eigen, :flann, :png, :openni, :qhull, :vtk ], {
 
 cmake_task :opencv, [ :png ], {
     'BUILD_SHARED_LIBS'     => [ BOOL, (not USE_STATIC_LIBRARIES) ],
-    'BUILD_WITH_STATIC_CRT' => [ BOOL, OFF ],
+    'BUILD_WITH_STATIC_CRT' => [ BOOL, (not USE_STATIC_LIBRARIES) ],
     'WITH_CUDA'             => [ BOOL, OFF ],
     'BUILD_TESTS'           => [ BOOL, ON  ],
     'WITH_FFMPEG'           => [ BOOL, OFF ],
@@ -451,9 +451,9 @@ cmake_task :opencv, [ :png ], {
 }.tap { | flags |
     flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
     flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
-},
+}
 # FIXME: How can this work in a fully automated build?
-[] + (WIN32 ? [ "-DCMAKE_GENERATOR:STRING='Visual Studio 10 Win64'" ] : [])
+#, [] + (WIN32 ? [ "-DCMAKE_GENERATOR:STRING='Visual Studio 10 Win64'" ] : [])
 
 # FIXME: Properly dispatch on actual config.
 custom_task :qt do | name, config |
