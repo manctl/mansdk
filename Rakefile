@@ -374,7 +374,7 @@ custom_task :boost do | name, config |
     build_dir = make_build_dir name, config
     stage_dir = config_path($stage_dir,config)
 
-    # FIXME: quick hack to avoid running boost every time.
+    # FIXME: Ugly hack to avoid building boost every time.
     if File.exists? "#{stage_dir}/include/boost" then
         next
     end
@@ -469,6 +469,11 @@ custom_task :qt do | name, config |
         } [config]
     end
 
+    # FIXME: Ugly hack to avoid building qt every time.
+    if File.exists? "#{build_dir}/.qmake.cache" then
+        next
+    end
+
     if WIN32 then
         cd build_dir do
             # FIXME: Do 32/64 bit dispatch.
@@ -542,6 +547,8 @@ all_tasks [
     :opencv,
     :boost,
     :ruby,
+    :qt,
+    :qt3d,
 ].tap { | tasks |
     tasks << :qt if WIN32
 }
