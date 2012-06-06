@@ -522,7 +522,12 @@ custom_task :qt3d, [ :qt ] do | name, config |
     source_dir = File.expand_path(name)
     build_dir = make_build_dir name, config
     stage_dir = config_path( $stage_dir, config)
-    qmake_path  = "#{stage_dir}/bin/qmake"
+    if WIN32 then
+        # FIXME: Have qt properly stage itself on windows.
+        qmake_path  = "#{make_build_dir('qt', config)}/bin/qmake.exe"
+    else
+        qmake_path  = "#{stage_dir}/bin/qmake"
+    end
     project_path = "#{source_dir}/qt3d.pro" 
     cd build_dir do
         # FIXME: Honor build configuration.
