@@ -61,3 +61,6 @@
 [submodule "qt3d"]
 	path = qt3d
 	url = git@bitbucket.org:manctl/qt3d.git
+[submodule "stk"]
+	path = stk
+	url = git@bitbucket.org:manctl/stk

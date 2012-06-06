@@ -328,6 +328,8 @@ cmake_task :portaudio, [], {
     'PA_DLL_LINK_WITH_STATIC_RUNTIME' => [ BOOL, OFF ],
 }
 
+cmake_task :stk
+
 cmake_task :vectorial
 
 cmake_task :jpeg
@@ -535,6 +537,7 @@ end
 all_tasks [
     :zlib,
     :portaudio,
+    :stk,
     :png,
     :vectorial,
     :jpeg,
