@@ -542,21 +542,20 @@ end
 all_tasks [
     :zlib,
     :portaudio,
-    :stk,
     :png,
     :vectorial,
     :jpeg,
     :usb,
     :openni,
-    :nite,
     :primesensor,
     :sensorkinect,
     :pcl,
     :opencv,
     :boost,
     :ruby,
-    :qt,
-    :qt3d,
 ].tap { | tasks |
     tasks << :qt if WIN32
+    tasks << :stk if not LINUX
+    tasks << :qt3d if not LINUX
+    tasks << :nite if not LINUX
 }
