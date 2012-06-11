@@ -445,7 +445,7 @@ cmake_task :pcl, [ :boost, :eigen, :flann, :png, :openni, :qhull, :vtk ], {
 
 cmake_task :opencv, [ :png ], {
     'BUILD_SHARED_LIBS'     => [ BOOL, (not USE_STATIC_LIBRARIES) ],
-    'BUILD_WITH_STATIC_CRT' => [ BOOL, (not USE_STATIC_LIBRARIES) ],
+    'BUILD_WITH_STATIC_CRT' => [ BOOL, OFF ],
     'WITH_CUDA'             => [ BOOL, OFF ],
     'BUILD_TESTS'           => [ BOOL, ON  ],
     'WITH_FFMPEG'           => [ BOOL, OFF ],
@@ -546,16 +546,16 @@ all_tasks [
     :vectorial,
     :jpeg,
     :usb,
-    :openni,
-    :primesensor,
-    :sensorkinect,
     :pcl,
     :opencv,
     :boost,
     :ruby,
 ].tap { | tasks |
     tasks << :qt if WIN32
+	tasks << :openni if not WIN32
+    tasks << :primesensor if not WIN32
+    tasks << :sensorkinect if not WIN32
     tasks << :stk if not LINUX
     tasks << :qt3d if not LINUX
-    tasks << :nite if not LINUX
+    tasks << :nite if MACOSX
 }
