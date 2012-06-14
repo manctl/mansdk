@@ -444,10 +444,11 @@ cmake_task :pcl, [ :boost, :eigen, :flann, :png, :openni, :qhull, :vtk ], {
 #, [ '--trace' ]
 
 cmake_task :opencv, [ :png ], {
-    'BUILD_SHARED_LIBS'     => [ BOOL, (not USE_STATIC_LIBRARIES) ],
+	'CMAKE_BUILD_TYPE'      => [ STRING, "Release" ], # relwithdeinfo is not supported
+	'BUILD_SHARED_LIBS'     => [ BOOL, (not USE_STATIC_LIBRARIES) ],
     'BUILD_WITH_STATIC_CRT' => [ BOOL, OFF ],
     'WITH_CUDA'             => [ BOOL, OFF ],
-    'BUILD_TESTS'           => [ BOOL, ON  ],
+    'BUILD_TESTS'           => [ BOOL, OFF ],
     'WITH_FFMPEG'           => [ BOOL, OFF ],
     'WITH_EIGEN'            => [ BOOL, OFF ],
 }.tap { | flags |
