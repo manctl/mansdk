@@ -426,7 +426,7 @@ cmake_task :vtk, [], {
     flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
 }
 
-cmake_task :pcl, [ :boost, :eigen, :flann, :png, :openni, :qhull, :vtk ], {
+cmake_task :pcl, [ :boost, :eigen, :flann, :png, :qhull, :vtk ] + (WIN32 ? [] : [:openni]), {
     'BUILD_apps'              => [ BOOL, OFF ],
     'BUILD_simulation'        => [ BOOL, OFF ],
     'BUILD_GPU'               => [ BOOL, ON ],
