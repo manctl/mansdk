@@ -142,7 +142,7 @@ elsif UNIX
     $make_cmd  = 'make'
     $make_flags = [] + MAKE_FLAGS
     def path (str) return str end
-    USE_STATIC_LIBRARIES=true
+    USE_STATIC_LIBRARIES=false
 else
     raise "Unknown System"
 end
@@ -334,7 +334,7 @@ cmake_task :vectorial
 
 cmake_task :jpeg
 
-cmake_task :png, [ :zlib ], {
+cmake_task :png, [] + (WIN32 ? [:zlib] : []), {
     'PNG_NO_CONSOLE_IO'   => [ BOOL, OFF ],
     'PNG_NO_STDIO'        => [ BOOL, OFF ],
     'NO_VERSION_SUFFIXES' => [ BOOL, ON ],
@@ -426,7 +426,7 @@ cmake_task :vtk, [], {
     flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
 }
 
-cmake_task :pcl, [ :boost, :eigen, :flann, :png, :qhull, :vtk ] + (WIN32 ? [] : [:openni]), {
+cmake_task :pcl, [ :boost, :eigen, :flann, :qhull, :vtk ] + (WIN32 ? [:png] : [:openni]), {
     'BUILD_apps'              => [ BOOL, OFF ],
     'BUILD_simulation'        => [ BOOL, OFF ],
     'BUILD_GPU'               => [ BOOL, ON ],
@@ -443,9 +443,9 @@ cmake_task :pcl, [ :boost, :eigen, :flann, :png, :qhull, :vtk ] + (WIN32 ? [] : 
 
 #, [ '--trace' ]
 
-cmake_task :opencv, [ :png ], {
-	'CMAKE_BUILD_TYPE'      => [ STRING, "Release" ], # relwithdeinfo is not supported
-	'BUILD_SHARED_LIBS'     => [ BOOL, (not USE_STATIC_LIBRARIES) ],
+cmake_task :opencv, [] + (WIN32 ? [:png] : []), {
+    'CMAKE_BUILD_TYPE'      => [ STRING, "Release" ], # relwithdeinfo is not supported
+    'BUILD_SHARED_LIBS'     => [ BOOL, (not USE_STATIC_LIBRARIES) ],
     'BUILD_WITH_STATIC_CRT' => [ BOOL, OFF ],
     'WITH_CUDA'             => [ BOOL, OFF ],
     'BUILD_TESTS'           => [ BOOL, OFF ],
@@ -461,7 +461,9 @@ cmake_task :opencv, [ :png ], {
 # FIXME: Properly dispatch on actual config.
 custom_task :qt do | name, config |
     source_dir = File.expand_path(name)
-    build_dir = make_build_dir name, config
+    # Build into stage.
+    build_dir = config_path($stage_dir, config) # make_build_dir name, config
+    mkdir_p build_dir
 
     def qt_config (config)
         return {
@@ -541,9 +543,7 @@ end
 #-------------------------------------------------------------------------------
 
 all_tasks [
-    :zlib,
     :portaudio,
-    :png,
     :vectorial,
     :jpeg,
     :usb,
@@ -551,12 +551,14 @@ all_tasks [
     :opencv,
     :boost,
     :ruby,
+    :qt,
+    :qt3d
 ].tap { | tasks |
-    tasks << :qt if WIN32
-	tasks << :openni if not WIN32
+    tasks << :png if WIN32
+    tasks << :zlib if WIN32
+    tasks << :openni if not WIN32
     tasks << :primesensor if not WIN32
     tasks << :sensorkinect if not WIN32
     tasks << :stk if not LINUX
-    tasks << :qt3d if not LINUX
     tasks << :nite if MACOSX
 }
