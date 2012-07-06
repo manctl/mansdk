@@ -536,7 +536,7 @@ custom_task :qt3d, [ :qt ] do | name, config |
         # FIXME: Honor build configuration.
         sh qmake_path, "PREFIX=#{stage_dir}", project_path
         sh $make_cmd, *$make_flags
-        sh $make_cmd, 'install'
+        sh $make_cmd, "INSTALL_ROOT=#{stage_dir}", 'install'
     end
 end
 
