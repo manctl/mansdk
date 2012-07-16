@@ -462,7 +462,8 @@ cmake_task :opencv, [] + (WIN32 ? [:png] : []), {
 custom_task :qt do | name, config |
     source_dir = File.expand_path(name)
     # Build into stage.
-    build_dir = config_path($stage_dir, config) # make_build_dir name, config
+    # build_dir = make_build_dir name, config
+    build_dir = config_path($stage_dir, config)
     mkdir_p build_dir
 
     def qt_config (config)
