@@ -2,11 +2,11 @@
 
 if test -z "$WINDIR"; then
     case `uname` in
-        Darwin)
+        Darwin*|darwin*)
             SED_I="-i ''"
             ;;
 
-        linux)
+        Linux*|linux*)
             SED_I="-i"
             ;;
     esac
