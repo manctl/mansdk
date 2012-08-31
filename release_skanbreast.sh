@@ -7,14 +7,14 @@ mkdir -p $dir
 cd $dir
 mkdir bin lib lib64
 cd bin
-cp $stage/bin/{skanbreast,rgbd-multikinect,rgbd-viewer} .
+cp -a $stage/bin/{skanbreast,rgbd-multikinect,rgbd-viewer} .
 strip *
-cp -r $stage/bin/config .
+cp -ra $stage/bin/config .
 cd ../lib
-cp $stage/lib/*.so* .
+cp -a $stage/lib/*.so* .
 strip *
 cd ../lib64
-cp $stage/lib64/*.so* .
+cp -a $stage/lib64/*.so* .
 strip *
 cd ../..
 tar cvfz ${dir}.tar.bz2 $dir
