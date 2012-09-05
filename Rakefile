@@ -292,10 +292,14 @@ end
 
 def custom_task (sym, deps = [], &blk)
     name = sym.to_s
+    name_only = name + '-only'
+    sym_only = name_only.intern
     CONFIGS.each do | config |
-        t = task config_symbol(name, config) => config_deps(deps, config) do | task, args | blk.call(name, config) end
+        task config_symbol(name     , config) => config_deps(deps, config) do | task, args | blk.call(name, config) end
+        task config_symbol(name_only, config) => config_deps([]  , config) do | task, args | blk.call(name, config) end
     end
-    task sym => [ config_symbol(name, DEFAULT_CONFIG) ]
+    task sym      => [ config_symbol(name     , DEFAULT_CONFIG) ]
+    task sym_only => [ config_symbol(name_only, DEFAULT_CONFIG) ]
 end
 
 def cmake_task (sym, deps = [], extra_defs = {}, extra_args = [])
@@ -537,7 +541,7 @@ custom_task :qt3d, [ :qt ] do | name, config |
     project_path = "#{source_dir}/qt3d.pro" 
     cd build_dir do
         # FIXME: Honor build configuration.
-        sh qmake_path, "PREFIX=#{stage_dir}", project_path
+        sh qmake_path, '-d', "PREFIX=#{stage_dir}", project_path
         sh $make_cmd, *$make_flags
         sh $make_cmd, "INSTALL_ROOT=#{stage_dir}", 'install'
     end
