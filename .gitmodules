@@ -64,3 +64,9 @@
 [submodule "stk"]
 	path = stk
 	url = git@bitbucket.org:manctl/stk
+[submodule "g2o"]
+	path = g2o
+	url = git@github.com:manctl/g2o.git
+[submodule "opengm"]
+	path = opengm
+	url = git@github.com:manctl/opengm.git

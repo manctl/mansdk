@@ -344,6 +344,15 @@ cmake_task :png, [] + (WIN32 ? [:zlib] : []), {
     'NO_VERSION_SUFFIXES' => [ BOOL, ON ],
 }
 
+cmake_task :opengm, [ :boost ], {
+    'WITH_BOOST'      => [ BOOL, ON ],
+    'BUILD_EXAMPLES'  => [ BOOL, OFF ],
+    'BUILD_TESTING'   => [ BOOL, OFF ],
+}
+
+cmake_task :g2o, [ :eigen ], {
+}
+
 cmake_task :usb
 
 cmake_task :openni, [ :jpeg, :usb, ], {
@@ -560,6 +569,7 @@ all_tasks [
     :ruby,
     :qt,
     :qt3d
+#   :opengm
 ].tap { | tasks |
     tasks << :png if WIN32
     tasks << :zlib if WIN32
@@ -567,5 +577,5 @@ all_tasks [
     tasks << :primesensor if not WIN32
     tasks << :sensorkinect if not WIN32
     tasks << :stk if not LINUX
-    tasks << :nite if MACOSX
+    tasks << :nite if MACOSX or LINUX
 }
