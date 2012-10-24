@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# Example: release_skanbreast.sh skanbreast-1.0
+# Note: do not forget to run make install before
+
+if test $# -ne 1; then
+    echo "Usage: $0 dirname"
+    exit 1
+fi
+
 dir=$1
 stage=`pwd`/stage/relwithdebinfo
 
@@ -17,4 +25,4 @@ cd ../lib64
 cp -a $stage/lib64/*.so* .
 strip *
 cd ../..
-tar cvfz ${dir}.tar.bz2 $dir
+tar cvfj ${dir}.tar.bz2 $dir
