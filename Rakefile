@@ -446,6 +446,7 @@ cmake_task :pcl, [ :boost, :eigen, :flann, :qhull, :vtk ] + (WIN32 ? [:png] : [:
     'BUILD_gpu_kinfu_large_scale' => [ BOOL, OFF ],
     'BUILD_GPU'                   => [ BOOL, ON ],
     'BUILD_CUDA'                  => [ BOOL, ON ],
+	'BUILD_cuda_io'               => [ BOOL, OFF ], # Broken on Windows with PCL trunk.
     'BOOST_ROOT'                  => [ PATH, STAGE_DIR ],
     'Boost_NO_SYSTEM_PATHS'       => [ BOOL, ON ],
     'FLANN_ROOT'                  => [ PATH, STAGE_DIR ],
