@@ -446,12 +446,13 @@ cmake_task :pcl, [ :boost, :eigen, :flann, :qhull, :vtk ] + (WIN32 ? [:png] : [:
     'BUILD_gpu_kinfu_large_scale' => [ BOOL, OFF ],
     'BUILD_GPU'                   => [ BOOL, ON ],
     'BUILD_CUDA'                  => [ BOOL, ON ],
-	'BUILD_cuda_io'               => [ BOOL, OFF ], # Broken on Windows with PCL trunk.
+    'BUILD_cuda_io'               => [ BOOL, OFF ], # Broken on Windows with PCL trunk.
     'BOOST_ROOT'                  => [ PATH, STAGE_DIR ],
     'Boost_NO_SYSTEM_PATHS'       => [ BOOL, ON ],
     'FLANN_ROOT'                  => [ PATH, STAGE_DIR ],
     'PCL_SHARED_LIBS'             => [ BOOL, (not USE_STATIC_LIBRARIES) ],
     'BUILD_TESTS'                 => [ BOOL, OFF ],
+    'BUILD_OPENNI'                => [ BOOL, OFF ],
 }.tap { | flags |
     flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
     flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
