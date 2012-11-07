@@ -459,17 +459,17 @@ cmake_task :pcl, [ :boost, :eigen, :flann, :qhull, :vtk ] + (WIN32 ? [:png] : [:
 	'BUILD_keypoints'             => [ BOOL, OFF ],
 	'BUILD_ml'                    => [ BOOL, ON ],
 	'BUILD_recognition'           => [ BOOL, OFF ],
-	'BUILD_segmentation'          => [ BOOL, ON ], // registration
+	'BUILD_segmentation'          => [ BOOL, ON ], # registration
 	'BUILD_stereo'                => [ BOOL, OFF ],
 	'BUILD_tracking'              => [ BOOL, OFF ],	
-	'BUILD_visualization'         => [ BOOL, ON ],	// kinfu
-    'BUILD_TESTS'                 => [ BOOL, OFF ],
-    'BUILD_OPENNI'                => [ BOOL, OFF ],
+	'BUILD_visualization'         => [ BOOL, ON ],	# kinfu
+	'BUILD_TESTS'                 => [ BOOL, OFF ],
+        'BUILD_OPENNI'                => [ BOOL, OFF ],
 	'BOOST_ROOT'                  => [ PATH, STAGE_DIR ],
-    'Boost_NO_SYSTEM_PATHS'       => [ BOOL, ON ],
-    'FLANN_ROOT'                  => [ PATH, STAGE_DIR ],
-    'PCL_SHARED_LIBS'             => [ BOOL, (not USE_STATIC_LIBRARIES) ],
-	'PCL_ONLY_CORE_POINT_TYPES'   => [ BOOL, ON ],
+        'Boost_NO_SYSTEM_PATHS'       => [ BOOL, ON ],
+        'FLANN_ROOT'                  => [ PATH, STAGE_DIR ],
+        'PCL_SHARED_LIBS'             => [ BOOL, (not USE_STATIC_LIBRARIES) ],
+        'PCL_ONLY_CORE_POINT_TYPES'   => [ BOOL, ON ],
 }.tap { | flags |
     flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
     flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
