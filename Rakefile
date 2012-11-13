@@ -350,6 +350,9 @@ cmake_task :opengm, [ :boost ], {
     'BUILD_TESTING'   => [ BOOL, OFF ],
 }
 
+cmake_task :quazip, [ :qt ], {
+}
+
 cmake_task :g2o, [ :eigen ], {
 }
 
@@ -587,7 +590,8 @@ all_tasks [
     :boost,
     :ruby,
     :qt,
-    :qt3d
+    :qt3d,
+    :quazip,
 #   :opengm
 ].tap { | tasks |
     tasks << :png if WIN32
