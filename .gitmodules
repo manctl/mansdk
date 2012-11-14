@@ -76,3 +76,6 @@
 [submodule "firebreath"]
 	path = firebreath
 	url = git@github.com:manctl/firebreath
+[submodule "cryptopp"]
+	path = cryptopp
+	url = git@bitbucket.org:manctl/cryptopp.git
