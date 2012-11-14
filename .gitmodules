@@ -73,3 +73,6 @@
 [submodule "quazip"]
 	path = quazip
 	url = ssh://git@bitbucket.org/manctl/quazip.git
+[submodule "firebreath"]
+	path = firebreath
+	url = git@github.com:manctl/firebreath
