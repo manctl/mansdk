@@ -79,3 +79,6 @@
 [submodule "openssl"]
 	path = openssl
 	url = git@bitbucket.org:manctl/openssl
+[submodule "cryptopp"]
+	path = cryptopp
+	url = git@bitbucket.org:manctl/cryptopp.git
