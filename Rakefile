@@ -580,6 +580,35 @@ custom_task :qt3d, [ :qt ] do | name, config |
     end
 end
 
+custom_task :openssl do | name, config |
+    source_dir = File.expand_path(name)
+    build_dir = make_build_dir name, config
+
+    # Remove this if you find out how to perform out-of-source openssl builds.
+    cp_r source_dir, config_path($build_dir, config)
+
+    if WIN32 then
+        cd build_dir do
+            if PLATFORM_ARCH == 'x86' then
+                sh 'perl', "./Configure", 'VC-WIN32', 'no-asm', "--prefix=#{config_path($stage_dir, config)}"
+                sh "ms/do_ms"
+            elsif PLATFORM_ARCH == 'x64' then
+                sh 'perl', "./Configure", 'VC-WIN64A', 'no-asm', "--prefix=#{config_path($stage_dir, config)}"
+                sh "ms/do_win64a"
+            end
+            sh 'nmake', '-f', 'ms/ntdll.mak'
+            sh 'nmake', '-f', 'ms/ntdll.mak', 'install'
+        end
+    else
+        cp_r source_dir, config_path($build_dir, config)
+        cd build_dir do
+             sh "./config", "--prefix=#{config_path($stage_dir, config)}"
+             sh 'make'
+             sh 'make', 'install'
+        end
+    end
+end
+
 #-------------------------------------------------------------------------------
 
 all_tasks [
@@ -595,6 +624,7 @@ all_tasks [
     :qt3d,
     :quazip,
     :cryptopp,
+    :openssl
 #   :opengm
 ].tap { | tasks |
     tasks << :png if WIN32
