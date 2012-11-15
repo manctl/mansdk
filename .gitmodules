@@ -76,3 +76,6 @@
 [submodule "firebreath"]
 	path = firebreath
 	url = git@github.com:manctl/firebreath
+[submodule "openssl"]
+	path = openssl
+	url = git@bitbucket.org:manctl/openssl
