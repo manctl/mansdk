@@ -338,6 +338,8 @@ cmake_task :vectorial
 
 cmake_task :jpeg
 
+cmake_task :cryptopp
+
 cmake_task :png, [] + (WIN32 ? [:zlib] : []), {
     'PNG_NO_CONSOLE_IO'   => [ BOOL, OFF ],
     'PNG_NO_STDIO'        => [ BOOL, OFF ],
@@ -592,6 +594,7 @@ all_tasks [
     :qt,
     :qt3d,
     :quazip,
+    :cryptopp,
 #   :opengm
 ].tap { | tasks |
     tasks << :png if WIN32
