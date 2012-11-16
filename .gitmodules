@@ -1,84 +1,84 @@
 [submodule "primesensor"]
-	path = primesensor
-	url = git@github.com:manctl/primesensor
+	path = deps/primesensor
+	url = git@github.com:manctl/deps/primesensor
 [submodule "sensorkinect"]
-	path = sensorkinect
-	url = git@github.com:manctl/primesensor
+	path = deps/sensorkinect
+	url = git@github.com:manctl/deps/primesensor
 [submodule "pcl"]
-	path = pcl
-	url = git@bitbucket.org:manctl/pcl
+	path = deps/pcl
+	url = git@bitbucket.org:manctl/deps/pcl
 [submodule "openni"]
-	path = openni
-	url = git@github.com:manctl/openni
+	path = deps/openni
+	url = git@github.com:manctl/deps/openni
 [submodule "usb"]
-	path = usb
-	url = git@github.com:manctl/usb
+	path = deps/usb
+	url = git@github.com:manctl/deps/usb
 [submodule "jpeg"]
-	path = jpeg
-	url = git@github.com:manctl/jpeg
+	path = deps/jpeg
+	url = git@github.com:manctl/deps/jpeg
 [submodule "nite"]
-	path = nite
-	url = git@bitbucket.org:manctl/nite
+	path = deps/nite
+	url = git@bitbucket.org:manctl/deps/nite
 [submodule "flann"]
-	path = flann
-	url = git@github.com:manctl/flann
+	path = deps/flann
+	url = git@github.com:manctl/deps/flann
 [submodule "eigen"]
-	path = eigen
-	url = git@bitbucket.org:manctl/eigen
+	path = deps/eigen
+	url = git@bitbucket.org:manctl/deps/eigen
 [submodule "opencv"]
-	path = opencv
-	url = git@bitbucket.org:manctl/opencv
+	path = deps/opencv
+	url = git@bitbucket.org:manctl/deps/opencv
 [submodule "qhull"]
-	path = qhull
-	url = git@github.com:manctl/qhull
+	path = deps/qhull
+	url = git@github.com:manctl/deps/qhull
 [submodule "boost"]
-	path = boost
-	url = git@github.com:manctl/boost
+	path = deps/boost
+	url = git@github.com:manctl/deps/boost
 [submodule "vtk"]
-	path = vtk
-	url = git@github.com:manctl/vtk
+	path = deps/vtk
+	url = git@github.com:manctl/deps/vtk
 [submodule "qt"]
-	path = qt
-	url = git@bitbucket.org:manctl/qt
+	path = deps/qt
+	url = git@bitbucket.org:manctl/deps/qt
 [submodule "ruby"]
-	path = ruby
-	url = git@github.com:manctl/ruby
+	path = deps/ruby
+	url = git@github.com:manctl/deps/ruby
 [submodule "zlib"]
-	path = zlib
-	url = git@github.com:manctl/zlib
+	path = deps/zlib
+	url = git@github.com:manctl/deps/zlib
 [submodule "png"]
-	path = png
-	url = git@bitbucket.org:manctl/png
+	path = deps/png
+	url = git@bitbucket.org:manctl/deps/png
 [submodule "sensorkin4win"]
-	path = sensorkin4win
-	url = git@github.com:manctl/primesensor
+	path = deps/sensorkin4win
+	url = git@github.com:manctl/deps/primesensor
 [submodule "vectorial"]
-	path = vectorial
-	url = git@github.com:manctl/vectorial
+	path = deps/vectorial
+	url = git@github.com:manctl/deps/vectorial
 [submodule "portaudio"]
-	path = portaudio
-	url = git@bitbucket.org:manctl/portaudio
+	path = deps/portaudio
+	url = git@bitbucket.org:manctl/deps/portaudio
 [submodule "qt3d"]
-	path = qt3d
-	url = git@bitbucket.org:manctl/qt3d
+	path = deps/qt3d
+	url = git@bitbucket.org:manctl/deps/qt3d
 [submodule "stk"]
-	path = stk
-	url = git@bitbucket.org:manctl/stk
+	path = deps/stk
+	url = git@bitbucket.org:manctl/deps/stk
 [submodule "g2o"]
-	path = g2o
-	url = git@github.com:manctl/g2o
+	path = deps/g2o
+	url = git@github.com:manctl/deps/g2o
 [submodule "opengm"]
-	path = opengm
-	url = git@github.com:manctl/opengm
+	path = deps/opengm
+	url = git@github.com:manctl/deps/opengm
 [submodule "quazip"]
-	path = quazip
-	url = git@bitbucket.org:manctl/quazip
+	path = deps/quazip
+	url = git@bitbucket.org:manctl/deps/quazip
 [submodule "firebreath"]
-	path = firebreath
-	url = git@github.com:manctl/firebreath
+	path = deps/firebreath
+	url = git@github.com:manctl/deps/firebreath
 [submodule "openssl"]
-	path = openssl
-	url = git@bitbucket.org:manctl/openssl
+	path = deps/openssl
+	url = git@bitbucket.org:manctl/deps/openssl
 [submodule "cryptopp"]
-	path = cryptopp
-	url = git@bitbucket.org:manctl/cryptopp
+	path = deps/cryptopp
+	url = git@bitbucket.org:manctl/deps/cryptopp

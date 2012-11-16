@@ -1,15 +1,22 @@
-ManSDK
-======
+# ManCTL's Software Development Kit
 
-ManCTL's Development Dependencies Bundle.
+## What's this?
 
-Prerequisites
--------------
+For now, this tree is just our growing bag of open-source dependencies and its master build system, exposed to the outer world.
+
+Use at your own risk.
+
+## Prerequisites
 
  * /usr/bin/env ruby --version >= 1.8-ish
+ * CMake 2.8.10
+ * Perl
+ * A functional C++ compilation toolchain.
+ * Windows | MacOSX | Linux
 
-Examples
---------
+## Usage
+
+### Examples
 
  * rake
 
@@ -50,3 +57,16 @@ Builds (using up to 8 cores).
  * rake debug release relwithdebinfo minsizerel
 
 Builds absolutely everything. Make sure your build directory storage is up to the task.
+
+## About
+
+### Why?
+
+Because we found it incredibly hard to build stable software on a massive, yet constantly evolving open-source software base.
+
+### Authors
+
+ * Nicolas Burrus
+ * Nicolas Tisserand
+
+More info: http://manctl.com
