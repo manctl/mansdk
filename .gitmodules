@@ -42,7 +42,7 @@
 	url = git@bitbucket.org:manctl/qt
 [submodule "ruby"]
 	path = ruby
-	url = git@github.com:manctl/ruby.git
+	url = git@github.com:manctl/ruby
 [submodule "zlib"]
 	path = zlib
 	url = git@github.com:manctl/zlib
@@ -60,19 +60,19 @@
 	url = git@bitbucket.org:manctl/portaudio
 [submodule "qt3d"]
 	path = qt3d
-	url = git@bitbucket.org:manctl/qt3d.git
+	url = git@bitbucket.org:manctl/qt3d
 [submodule "stk"]
 	path = stk
 	url = git@bitbucket.org:manctl/stk
 [submodule "g2o"]
 	path = g2o
-	url = git@github.com:manctl/g2o.git
+	url = git@github.com:manctl/g2o
 [submodule "opengm"]
 	path = opengm
-	url = git@github.com:manctl/opengm.git
+	url = git@github.com:manctl/opengm
 [submodule "quazip"]
 	path = quazip
-	url = ssh://git@bitbucket.org/manctl/quazip.git
+	url = git@bitbucket.org:manctl/quazip
 [submodule "firebreath"]
 	path = firebreath
 	url = git@github.com:manctl/firebreath
@@ -81,4 +81,4 @@
 	url = git@bitbucket.org:manctl/openssl
 [submodule "cryptopp"]
 	path = cryptopp
-	url = git@bitbucket.org:manctl/cryptopp.git
+	url = git@bitbucket.org:manctl/cryptopp
