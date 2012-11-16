@@ -97,7 +97,7 @@ static const char arch [] =
 int
 main (int argc, char* argv[])
 {
-    std::cout << arch << std::endl;
+    std::cout << arch;
 }
 EOF
 
