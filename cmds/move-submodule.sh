@@ -1,54 +1,29 @@
-#!/bin/sh -ex
+#!/bin/sh -e
 
-here=`cd "\`dirname \"$0\"\`";pwd`
+here=`cd "\`dirname \"$0\"\`";pwd` ; source "$here/cmd.sh" ; cd "$here/.."
 
-cd $here
-
-from=$1
-to=$2
-
-function run ()
-{
-    "$@"
-}
-
-function ran ()
-{
-    echo "$@"
-}
+echo "This half-assed script worked once during a migration."
+echo "Use at your own risk."
 
 if test $# -ne 2; then
     echo "Usage: $(basename $0) <from> <to>"
     exit 1
 fi
 
-if test -z "$WINDIR"; then
-    case `uname` in
-        Darwin*|darwin*)
-            SED_I="-i .bak"
-            ;;
+from=$1
+to=$2
 
-        Linux*|linux*)
-            SED_I="-i"
-            ;;
-    esac
-else
-    # Windows
-    SED_I="-i"
-fi
+to_parent_dir="$(dirname $to)"
+to_name="$(basename $to)"
+from_name="$(basename $from)"
 
-run sed $SED_I                                   \
+sed_i                                            \
     -e "s!url = \\(.*\\)/$from\$!url = \\1/$to!" \
     -e "s!path = $from\$!path = $to!"            \
     .gitmodules
 
-to_parent_dir="$(dirname $to)"
-
-to_name="$(basename $to)"
-from_name="$(basename $from)"
-
 if test -f $from/.git; then
-    run sed $SED_I                                             \
+    sed_i                                                      \
         -e "s!worktree = \\(.*\\)/$from\$!worktree = \\1/$to!" \
         ".git/modules/$from_name/config"
 
@@ -57,18 +32,16 @@ if test -f $from/.git; then
     echo "gitdir: $backpath/.git/modules/$from_name" > $from/.git
 fi
 
-run mkdir -p $to_parent_dir
+mkdir -p $to_parent_dir
 
-run mv -v $from $to
+mv -v $from $to
 
-run git add $to
+git add $to
 
-run git rm --cached $from
+git rm --cached $from
 
 git submodule sync $to
 
 git add .gitmodules
 
 cat .gitmodules | grep "$to\$"
-
-cd -

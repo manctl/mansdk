@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/bin/sh -e
+
+here=`cd "\`dirname \"$0\"\`";pwd` ; source "$here/cmd.sh" ; cd "$here/.."
 
 # Example: release_skanbreast.sh skanbreast-1.0
 # Note: do not forget to run make install before

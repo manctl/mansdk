@@ -1,26 +1,17 @@
-#!/bin/sh
+#!/bin/sh -e
 
-if test -z "$WINDIR"; then
-    case `uname` in
-        Darwin*|darwin*)
-            SED_I="-i .bak"
-            ;;
+here=`cd "\`dirname \"$0\"\`";pwd` ; source "$here/cmd.sh" ; cd "$here/.."
 
-        Linux*|linux*)
-            SED_I="-i"
-            ;;
-    esac
-else
-    # Windows
-    SED_I="-i"
+if test $# -ne 1; then
+    echo "Usage: $(basename $0) <path>"
+    exit 1
 fi
 
-sed $SED_I \
--e 's!git@github.com:manctl/!/Users/nt/Work/manctl/mansdk/!' \
--e 's!git@bitbucket.org:manctl/!/Users/nt/Work/manctl/mansdk/!' \
-.gitmodules
- 
-cat .gitmodules
+path=$1
 
-#git submodule sync
-#git submodule update
+sed_i                                       \
+    -e "s!git@github.com:manctl/!$path!"    \
+    -e "s!git@bitbucket.org:manctl/!$path!" \
+    .gitmodules
+ 
+git submodule sync

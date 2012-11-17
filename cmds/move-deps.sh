@@ -1,6 +1,9 @@
-#!/bin/sh -ex
+#!/bin/sh -e
 
-here=`cd "\`dirname \"$0\"\`";pwd`
+echo "This is a migration script. And it's been fired already."
+exit
+
+here=`cd "\`dirname \"$0\"\`";pwd` ; source "$here/cmd.sh" ; cd "$here/.."
 
 deps="\
 boost
@@ -34,5 +37,5 @@ zlib
 "
 
 for dep in $deps; do
-    $here/.move-submodule.sh $dep deps/$dep
+    cmds/move-submodule.sh $dep deps/$dep
 done

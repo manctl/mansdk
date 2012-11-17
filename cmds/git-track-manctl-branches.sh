@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/sh -e
+
+here=`cd "\`dirname \"$0\"\`";pwd` ; source "$here/cmd.sh" ; cd "$here/.."
 
 for d in boost eigen flann jpeg opencv openni nite pcl usb vtk; do
     cd $d
