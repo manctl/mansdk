@@ -590,10 +590,11 @@ cmake_dep :opencv, [] + (WINDOWS ? [:png] : []), {
 }
 
 # FIXME: Properly dispatch on actual config.
-custom_dep :qt do | name, cfg |
+custom_dep :qt, [:openssl] do | name, cfg |
     source_dir = dep_source_dir name
-     build_dir = make_dep_build_dir name, cfg
-     stage_dir = stage_dir cfg
+    stage_dir = stage_dir cfg
+	build_dir = make_dep_build_dir name, cfg
+    mkdir_p build_dir
 
     def qt_config (cfg)
         return {
@@ -614,6 +615,7 @@ custom_dep :qt do | name, cfg |
             # FIXME: Do 32/64 bit dispatch.
             # FIXME: Properly install products in stage.
             sh "#{ source_dir }/build-qt-windows-msvc10.cmd", 'amd64', (qt_config cfg)
+			# FIXME: would copying qmake.exe into stage/bin be enough?
         end
     elsif UNIX then
         cd build_dir do
