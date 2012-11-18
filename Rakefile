@@ -725,7 +725,7 @@ deps [
     :quazip,
     :cryptopp,
     :openssl
-#   :opengm
+    :opengm
 ].tap { | list |
     list << :png          if WINDOWS
     list << :zlib         if WINDOWS
