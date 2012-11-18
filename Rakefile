@@ -132,7 +132,7 @@ begin
             USE_STATIC_LIBRARIES=false
         when /win32|mingw32/ then
             $cmake_gen = 'NMake Makefiles'
-            $make_cmd  = 'nmake'
+            $make_cmd  = 'jom' # Much faster on windows than nmake.
             $make_flags = [] + MAKE_FLAGS
             def path (str) return str.gsub('/', '\\') end
             USE_STATIC_LIBRARIES=false
