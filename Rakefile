@@ -724,7 +724,7 @@ deps [
     :qt3d,
     :quazip,
     :cryptopp,
-    :openssl
+    :openssl,
     :opengm
 ].tap { | list |
     list << :png          if WINDOWS
