@@ -614,7 +614,7 @@ custom_dep :qt, [:openssl] do | name, cfg |
         cd build_dir do
             # FIXME: Do 32/64 bit dispatch.
             # FIXME: Properly install products in stage.
-            sh "#{ source_dir }/build-qt-windows-msvc10.cmd", 'amd64', (qt_config cfg)
+            sh "#{ source_dir }/build-qt-windows-msvc10.cmd", 'amd64', (qt_config cfg), stage_dir
 			cp_r "#{ build_dir }/bin/qmake.exe", "#{ stage_dir }/bin/qmake.exe"
         end
     elsif UNIX then
