@@ -299,8 +299,7 @@ def dep_deps (deps, cfg, suffix = '')
 end
 
 def dep_source_dir (name)
-    return File.expand_path name
-#   FIXME: return File.expand_path File.join 'deps', name
+    return File.expand_path File.join 'deps', name
 end
 
 def dep_build_dir (name, cfg)
