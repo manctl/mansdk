@@ -598,7 +598,7 @@ cmake_dep :vtk, [], {
     flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX and ARCH_64
 }
 
-cmake_dep :pcl, [ :boost, :eigen, :flann, :qhull, :vtk ] + (WINDOWS ? [:png] : [:openni]), {
+cmake_dep :pcl, [ :boost, :eigen, :flann, :qhull, :qt, :vtk ] + (WINDOWS ? [:png] : [:openni]), {
 	'BUILD_apps'                  => [ BOOL, OFF ],
     'BUILD_simulation'            => [ BOOL, OFF ],
     'BUILD_outofcore'             => [ BOOL, OFF ],
