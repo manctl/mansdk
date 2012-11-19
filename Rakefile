@@ -50,9 +50,13 @@ def prefixed (path) return PREFIX ? File.join(PREFIX, path) : path end
 $output_dir = File.expand_path prefixed OUTPUT
  $stage_dir = File.expand_path prefixed STAGE
 
-def make_build_dir  (path)  build_dir = File.join  $build_dir, path; mkdir_p  build_dir; return  build_dir end
-def make_output_dir (path) output_dir = File.join $output_dir, path; mkdir_p output_dir; return output_dir end
-def make_stage_dir  (path)  stage_dir = File.join  $stage_dir, path; mkdir_p  stage_dir; return  stage_dir end
+def  build_subdir (path) return File.join  $build_dir, path end
+def output_subdir (path) return File.join $output_dir, path end
+def  stage_subdir (path) return File.join  $stage_dir, path end
+
+def  make_build_subdir (path) dir =  build_subdir(path); mkdir_p dir; return dir end
+def make_output_subdir (path) dir = output_subdir(path); mkdir_p dir; return dir end
+def  make_stage_subdir (path) dir =  stage_subdir(path); mkdir_p dir; return dir end
 
 #-------------------------------------------------------------------------------
 # Platform
@@ -123,10 +127,6 @@ EOF
 # Bootstrap
 
 begin
-    mkdir_p $stage_dir
-    mkdir_p $output_dir
-    mkdir_p $build_dir
-
     case RUBY_PLATFORM
         when /linux|darwin/  then
             $cmake_gen  = 'Unix Makefiles'
@@ -144,13 +144,17 @@ begin
             raise "Unknown Platform"
     end
 
-    source_dir = make_build_dir 'platform'
-    build_dir  = make_build_dir 'platform/build'
-    stage_dir  = make_stage_dir 'platform'
-
-    stage_bin = File.join stage_dir, 'bin'
+    stage_bin = File.join stage_subdir 'platform/bin/'
 
     unless files_exist_in stage_bin, exe('platform-os'), exe('platform-arch')
+
+        mkdir_p $stage_dir
+        mkdir_p $output_dir
+        mkdir_p $build_dir
+
+        source_dir = make_build_subdir 'platform'
+        build_dir  = make_build_subdir 'platform/build'
+        stage_dir  = make_stage_subdir 'platform'
 
         write_file_in source_dir, 'platform-os.cpp',   PLATFORM_OS_CPP
         write_file_in source_dir, 'platform-arch.cpp', PLATFORM_ARCH_CPP
@@ -190,6 +194,13 @@ ARCH_32 = X86
 ENV_PATH_SEPARATOR = WINDOWS ? ';' : ':'
 
 def add_env_path (path) ENV['PATH'] += env_path_separator + path end
+
+def rpath ()
+    if    LINUX  then return  LINUX_RPATH
+    elsif MACOSX then return MACOSX_RPATH
+    end
+    return ""
+end
 
 #-------------------------------------------------------------------------------
 # Configs
@@ -258,13 +269,13 @@ Platform:
     #{ PLATFORM_OS }-#{ PLATFORM_ARCH }
 
 Variables:
-        PREFIX     = #{ PREFIX }
-        CONFIG     = #{ CONFIG }
-        MAKE_FLAGS = #{ MAKE_FLAGS }
-        VERBOSE    = #{ VERBOSE }
-        BUILD      = #{ BUILD }
-        OUTPUT     = #{ OUTPUT }
-        STAGE      = #{ STAGE }
+    PREFIX     = #{ PREFIX }
+    CONFIG     = #{ CONFIG }
+    MAKE_FLAGS = #{ MAKE_FLAGS }
+    VERBOSE    = #{ VERBOSE }
+    BUILD      = #{ BUILD }
+    OUTPUT     = #{ OUTPUT }
+    STAGE      = #{ STAGE }
 
 Targets:
                                 all[:#{ CONFIGS.join '|:' }]
@@ -491,18 +502,10 @@ cmake_dep :flann, [], {
     flags[ 'CMAKE_CXX_FLAGS' ] = [ STRING, "/bigobj" ] if WINDOWS
 }
 
-cmake_dep :qhull, [],
-    {}.tap { | flags |
-        flags[ 'CMAKE_C_FLAGS'   ] = [ STRING, '-fPIC' ] if LINUX and ARCH_64
-        flags[ 'CMAKE_CXX_FLAGS' ] = [ STRING, '-fPIC' ] if LINUX and ARCH_64
+cmake_dep :qhull, [], {}.tap { | flags |
+    flags[ 'CMAKE_C_FLAGS'   ] = [ STRING, '-fPIC' ] if LINUX and ARCH_64
+    flags[ 'CMAKE_CXX_FLAGS' ] = [ STRING, '-fPIC' ] if LINUX and ARCH_64
 }
-
-def rpath ()
-    if    LINUX  then return  LINUX_RPATH
-    elsif MACOSX then return MACOSX_RPATH
-    end
-    return ""
-end
 
 custom_dep :boost do | name, cfg |
 
@@ -577,12 +580,12 @@ custom_dep :boost do | name, cfg |
     if MACOSX then
         boost_libs.each do | lib |
             sh 'install_name_tool', '-id',
-                "#{ MACOSX_RPATH }/libboost_#{ lib }.dylib",
+                "#{ MACOSX_RPATH  }/libboost_#{ lib }.dylib",
                 "#{ stage_dir }/lib/libboost_#{ lib }.dylib"
             boost_libs.each do | lib_ |
                 sh 'install_name_tool', '-change',
-                    "libboost_#{ lib }.dylib",
-                    "#{ MACOSX_RPATH }/libboost_#{ lib }.dylib",
+                                       "libboost_#{ lib }.dylib",
+                    "#{ MACOSX_RPATH  }/libboost_#{ lib }.dylib",
                     "#{ stage_dir }/lib/libboost_#{ lib_ }.dylib"
             end
         end
@@ -597,7 +600,7 @@ cmake_dep :vtk, [], {
     flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX and ARCH_64
 }
 
-cmake_dep :pcl, [ :boost, :eigen, :flann, :qhull, :vtk ] + (WINDOWS ? [:png] : [:openni]), {
+cmake_dep :pcl, [ :boost, :eigen, :flann, :qhull, :vtk ] + (WINDOWS ? [ :png ] : [ :openni ]), {
 	'BUILD_apps'                  => [ BOOL, OFF ],
     'BUILD_simulation'            => [ BOOL, OFF ],
     'BUILD_outofcore'             => [ BOOL, OFF ],
@@ -635,7 +638,7 @@ cmake_dep :pcl, [ :boost, :eigen, :flann, :qhull, :vtk ] + (WINDOWS ? [:png] : [
 
 #, [ '--trace' ]
 
-cmake_dep :opencv, [] + (WINDOWS ? [:png] : []), {
+cmake_dep :opencv, [] + (WINDOWS ? [ :png ] : []), {
     'CMAKE_BUILD_TYPE'               => [ STRING, "Release" ], # relwithdeinfo is not supported
     'BUILD_SHARED_LIBS'              => [ BOOL  , (not STATIC_LIBRARIES) ],
     'BUILD_WITH_STATIC_CRT'          => [ BOOL  , OFF ],
@@ -720,7 +723,7 @@ end
 # FIXME: Ruby does not compile on 64 bit target architectures.
 
 custom_dep :ruby do | name, cfg |
-    source_dir = File.expand_path name
+    source_dir = dep_source_dir name
      build_dir = make_dep_build_dir name, cfg
      stage_dir = stage_dir cfg
 
