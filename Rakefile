@@ -485,8 +485,6 @@ cmake_dep :primesensor,   [ :openni ] if not WINDOWS
 
 cmake_dep :sensorkinect,  [ :openni ] if not WINDOWS
 
-cmake_dep :sensorkin4win, [ :openni ] if not WINDOWS
-
 cmake_dep :nite,          [ :openni ] if not WINDOWS
 
 cmake_dep :eigen

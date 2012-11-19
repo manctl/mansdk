@@ -49,9 +49,6 @@
 [submodule "png"]
 	path = deps/png
 	url = git@bitbucket.org:manctl/png
-[submodule "sensorkin4win"]
-	path = deps/sensorkin4win
-	url = git@github.com:manctl/primesensor
 [submodule "vectorial"]
 	path = deps/vectorial
 	url = git@github.com:manctl/vectorial
