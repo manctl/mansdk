@@ -769,4 +769,4 @@ custom_dep :qt3d, [ :qt ] do | name, cfg |
         sh $make_cmd, *$make_flags
         sh $make_cmd, "INSTALL_ROOT=#{ stage_dir }", 'install'
     end
-end
+end if not WINDOWS # Fails at install on Windows.
