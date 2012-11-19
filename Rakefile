@@ -393,7 +393,6 @@ def cmake_build_type (cfg)
 end
 
 def cmake_build (name, cfg, extra_defs = {}, extra_args = [])
-
     source_dir = dep_source_dir name
     output_dir = output_dir cfg
     stage_dir  = stage_dir cfg
@@ -435,7 +434,7 @@ def cmake_build (name, cfg, extra_defs = {}, extra_args = [])
 end
 
 def cmake_dep (sym, deps = [], extra_defs = {}, extra_args = [])
-    custom_dep sym, deps do | name, cfg | cmake_build name, cfg, extra_defs, extra_args end
+	custom_dep sym, deps do | name, cfg | cmake_build name, cfg, extra_defs, extra_args end
 end
 
 #===============================================================================
@@ -472,21 +471,21 @@ cmake_dep :opengm, [ :boost ], {
     'BUILD_TESTING'   => [ BOOL, OFF ],
 }
 
-cmake_dep :quazip, [ :qt ]
+cmake_dep :quazip, [ :qt, :zlib ]
 
-cmake_dep :g2o, [ :eigen ]
+cmake_dep :g2o, [ :eigen ] if not WINDOWS
 
 cmake_dep :usb
 
 cmake_dep :openni, [ :jpeg, :usb, ], {
     'OPENNI_BUILD_SAMPLES' => [ BOOL, ON ],
-}
+} if not WINDOWS
 
 cmake_dep :primesensor,   [ :openni ] if not WINDOWS
 
 cmake_dep :sensorkinect,  [ :openni ] if not WINDOWS
 
-cmake_dep :sensorkin4win, [ :openni ]
+cmake_dep :sensorkin4win, [ :openni ] if not WINDOWS
 
 cmake_dep :nite,          [ :openni ] if not WINDOWS
 
@@ -600,7 +599,7 @@ cmake_dep :vtk, [], {
     flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX and ARCH_64
 }
 
-cmake_dep :pcl, [ :boost, :eigen, :flann, :qhull, :vtk ] + (WINDOWS ? [ :png ] : [ :openni ]), {
+cmake_dep :pcl, [ :boost, :eigen, :flann, :qhull, :qt, :vtk ] + (WINDOWS ? [ :png ] : [ :openni ]), {
 	'BUILD_apps'                  => [ BOOL, OFF ],
     'BUILD_simulation'            => [ BOOL, OFF ],
     'BUILD_outofcore'             => [ BOOL, OFF ],
@@ -701,7 +700,7 @@ custom_dep :qt, [ :openssl ] do | name, cfg |
 
     # FIXME: Ugly hack to avoid building qt every time.
     if File.exists? "#{ build_dir }/.qmake.cache" then
-        return
+        next
     end
 
     if WINDOWS then
@@ -765,4 +764,4 @@ custom_dep :qt3d, [ :qt ] do | name, cfg |
         sh $make_cmd, *$make_flags
         sh $make_cmd, "INSTALL_ROOT=#{ stage_dir }", 'install'
     end
-end
+end if not WINDOWS # Fails at install on Windows.
