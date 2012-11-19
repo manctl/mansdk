@@ -24,6 +24,8 @@ def files_exist_in (dir, *files)
     return ret
 end
 
+def add_env_path (path) ENV['PATH'] += File::PATH_SEPARATOR + path end
+
 #-------------------------------------------------------------------------------
 # Defaults
 
@@ -137,8 +139,10 @@ begin
             def exe  (str) return str end
             def path (str) return str end
         when /win32|mingw32/ then
-            $cmake_gen  = 'NMake Makefiles'
-            $make_cmd   = File.join HERE, 'core', 'deps', 'jom', 'jom.exe'
+            $cmake_gen  = 'NMake Makefiles JOM'
+            $jom_dir =  File.join HERE, 'core', 'deps', 'jom'
+            add_env_path $jom_dir
+            $make_cmd = 'nmake'
             $make_flags = [] + MAKE_FLAGS
             def exe  (str) return str + '.exe' end
             def path (str) return str.gsub('/', '\\') end
@@ -192,10 +196,6 @@ ARCH_64 = AMD64
 ARCH_32 = X86
 
 # Cross-platform Helpers
-
-ENV_PATH_SEPARATOR = WINDOWS ? ';' : ':'
-
-def add_env_path (path) ENV['PATH'] += env_path_separator + path end
 
 def rpath ()
     if    LINUX  then return  LINUX_RPATH
