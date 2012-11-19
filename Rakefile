@@ -3,6 +3,8 @@
 
 HERE = File.dirname File.expand_path __FILE__
 
+UNKNOWN_PLATFORM = "Unknown Platform"
+
 def write_file (path, contents)
     file = File.new(path, "w")
     file << contents
@@ -25,6 +27,21 @@ def files_exist_in (dir, *files)
 end
 
 def add_env_path (path) ENV['PATH'] += File::PATH_SEPARATOR + path end
+
+# Ruby's cp_r is kinda broken when copying symbolic links.
+# Fall back to platform-specific replacements.
+def mirror_dirs (source_dir, target_dir)
+    # Skip hidden source files.
+    source_files = Dir.glob File.join(source_dir, '*')
+    case RUBY_PLATFORM
+        when /linux|darwin/  then
+            source_files.each { | source_file | sh 'cp', '-a', source_file, target_dir }
+        when /win32|mingw32/ then
+            source_files.each { | source_file | sh 'xcopy', '/Y', '/Q', source_file, target_dir }
+        else
+            raise UNKNOWN_PLATFORM
+    end
+end
 
 #-------------------------------------------------------------------------------
 # Defaults
@@ -147,7 +164,7 @@ begin
             def exe  (str) return str + '.exe' end
             def path (str) return str.gsub('/', '\\') end
         else
-            raise "Unknown Platform"
+            raise UNKOWN_PLATFORM
     end
 
     stage_bin = File.join stage_subdir 'platform/bin/'
@@ -658,7 +675,7 @@ custom_dep :openssl do | name, cfg |
      stage_dir = stage_dir cfg
 
     # Remove this if you find out how to perform out-of-source openssl builds.
-    cp_r source_dir, build_dir(cfg)
+    mirror_dirs source_dir, build_dir
 
     if WINDOWS then
         cd build_dir do
@@ -673,7 +690,6 @@ custom_dep :openssl do | name, cfg |
             sh 'nmake', '-f', 'ms/ntdll.mak', 'install'
         end
     else
-        cp_r source_dir, build_dir
         cd build_dir do
              sh "./config", "--prefix=#{ stage_dir }"
              sh 'make'
