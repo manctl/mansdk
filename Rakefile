@@ -467,16 +467,9 @@ cmake_dep :g2o, [ :eigen ] if not WINDOWS
 
 cmake_dep :usb
 
-if (UNIX) then
-	cmake_dep :openni, [ :jpeg, :usb, ], {
-		'OPENNI_BUILD_SAMPLES' => [ BOOL, ON ],
-	}
-else
-	custom_dep :openni, [] do | name, cfg |
-		puts "WARNING: OpenNI disabled on Windows."
-		next
-	end
-end
+cmake_dep :openni, [ :jpeg, :usb, ], {
+    'OPENNI_BUILD_SAMPLES' => [ BOOL, ON ],
+} if not WINDOWS
 
 cmake_dep :primesensor,   [ :openni ] if not WINDOWS
 
