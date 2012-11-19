@@ -48,6 +48,10 @@ $output_dir = File.expand_path prefixed ENV['OUTPUT_DIR'] || OUTPUT
  MACOSX_RPATH="@loader_path/../lib"
  LINUX_RPATH="\$ORIGIN/../lib"
 
+def make_build_dir  (path)  build_dir = File.join  $build_dir, path; mkdir_p  build_dir; return  build_dir end
+def make_output_dir (path) output_dir = File.join $output_dir, path; mkdir_p output_dir; return output_dir end
+def make_stage_dir  (path)  stage_dir = File.join  $stage_dir, path; mkdir_p  stage_dir; return  stage_dir end
+
 #-------------------------------------------------------------------------------
 
 PLATFORM_OS_CPP = <<EOF
@@ -55,7 +59,7 @@ PLATFORM_OS_CPP = <<EOF
 
 // See: http://poshlib.hookatooka.com/poshlib/trac.cgi.
 static const char os [] =
-#if   defined(_WIN32) || defined(_WIN64) || defined(__WINDOWS__)
+#if   defined(_WINDOWS) || defined(_WIN64) || defined(__WINDOWS__)
     "windows"
 #elif defined(__linux__) || defined(__linux) || defined(linux)
     "linux"
@@ -73,6 +77,10 @@ main (int argc, char* argv[])
 }
 EOF
 
+OS_WINDOWS='windows'
+OS_LINUX='linux'
+OS_MACOSX='macosx'
+
 PLATFORM_ARCH_CPP = <<EOF
 #include <iostream>
 
@@ -81,7 +89,7 @@ static const char arch [] =
 #if   defined(_M_IX86) || defined(__i386__) || defined(__X86__) || defined(__I86__)
     "x86"
 #elif defined(__amd64__) || defined(__amd64) || defined(__x86_64__) || defined(__x86_64) || defined(_M_X64)
-    "x64"
+    "amd64"
 #elif defined(_M_PPC) || defined(__ppc__) || defined(__powerpc__) || defined(__POWERPC__)
     "ppc"
 #else
@@ -96,6 +104,10 @@ main (int argc, char* argv[])
 }
 EOF
 
+ARCH_X86='x86'
+ARCH_AMD64='amd64'
+ARCH_PPC='ppc'
+
 PLATFORM_CMAKELISTS_TXT = <<EOF
 cmake_minimum_required(VERSION 2.8)
 project(platform)
@@ -104,92 +116,68 @@ add_executable(platform-arch platform-arch.cpp)
 install(TARGETS platform-os platform-arch DESTINATION bin)
 EOF
 
-# FIXME: Move these inside the init task and let regular deps depend on PLATFORM_OS & PLATFORM_ARCH.
-case RUBY_PLATFORM
-    when /win32|mingw32/ then
-         WIN32=true
-        MACOSX=false
-         LINUX=false
-          UNIX=false
-    when /linux/ then
-         WIN32=false
-        MACOSX=false
-         LINUX=true
-          UNIX=true
-    when /darwin/ then
-         WIN32=false
-        MACOSX=true
-         LINUX=false
-          UNIX=true
-    else
-        raise "Unknown Platform"
-end
+#===============================================================================
 
-# FIXME: Likewise.
-if WIN32
-    $cmake_gen = 'NMake Makefiles'
-    $make_cmd  = 'nmake'
-    $make_flags = [] + MAKE_FLAGS
-    def path (str) return str.gsub('/', '\\') end
-    USE_STATIC_LIBRARIES=false
-elsif UNIX
-    $cmake_gen = 'Unix Makefiles'
-    $make_cmd  = 'make'
-    $make_flags = [] + MAKE_FLAGS
-    def path (str) return str end
-    USE_STATIC_LIBRARIES=false
-else
-    raise "Unknown System"
-end
+begin
+    mkdir_p $stage_dir
+    mkdir_p $output_dir
+    mkdir_p $build_dir
 
-#-------------------------------------------------------------------------------
-
-def cfg_dir (path, cfg)
-    return "#{path}/#{cfg}"
-end
-
-def  build_dir (cfg) return cfg_dir $build_dir , cfg end
-def output_dir (cfg) return cfg_dir $output_dir, cfg end
-def  stage_dir (cfg) return cfg_dir $stage_dir , cfg end
-
-def cfg_dirs (cfg)
-    return build_dir(cfg), output_dir(cfg), stage_dir(cfg)
-end
-
-def dep (sym, cfg)
-    return "#{sym.to_s}:#{cfg}".intern
-end
-
-#-------------------------------------------------------------------------------
-
-def dep_deps (deps, cfg)
-    ret = []
-    [ :init, *deps ].each do | dep_ |
-        ret << dep(dep_, cfg)
+    case RUBY_PLATFORM
+        when /linux|darwin/  then
+            $cmake_gen = 'Unix Makefiles'
+            $make_cmd  = 'make'
+            $make_flags = [] + MAKE_FLAGS
+            def path (str) return str end
+            USE_STATIC_LIBRARIES=false
+        when /win32|mingw32/ then
+            $cmake_gen = 'NMake Makefiles'
+            $make_cmd  = 'jom' # Much faster on windows than nmake.
+            $make_flags = [] + MAKE_FLAGS
+            def path (str) return str.gsub('/', '\\') end
+            USE_STATIC_LIBRARIES=false
+        else
+            raise "Unknown Platform"
     end
-    return ret
+
+    source_dir = make_build_dir 'platform'
+    build_dir  = make_build_dir 'platform/build'
+    stage_dir  = make_stage_dir 'platform'
+
+    write_file_in source_dir, 'platform-os.cpp',   PLATFORM_OS_CPP
+    write_file_in source_dir, 'platform-arch.cpp', PLATFORM_ARCH_CPP
+    write_file_in source_dir, 'CMakeLists.txt',    PLATFORM_CMAKELISTS_TXT
+
+    cd build_dir do
+        sh 'cmake',
+            "-G#{$cmake_gen}",
+            "-DCMAKE_BUILD_TYPE:STRING=Release",
+            "-DCMAKE_INSTALL_PREFIX:PATH=#{ stage_dir }",
+            source_dir
+        sh $make_cmd
+        sh $make_cmd, 'install'
+    end
+
+    stage_bin = File.join stage_dir, 'bin'
+
+    PLATFORM_OS_BIN   = File.join stage_bin, 'platform-os'
+    PLATFORM_ARCH_BIN = File.join stage_bin, 'platform-arch'
 end
 
-def dep_val (val, cfg)
-    return {
-         BUILD_DIR =>  build_dir(cfg),
-        OUTPUT_DIR => output_dir(cfg),
-         STAGE_DIR =>  stage_dir(cfg),
-    } [val] || val
-end
+PLATFORM_OS   = `#{ PLATFORM_OS_BIN   }`.strip
+PLATFORM_ARCH = `#{ PLATFORM_ARCH_BIN }`.strip
 
-def dep_source_dir (name)
-    return File.expand_path name
-#   FIXME: return File.expand_path File.join 'deps', name
-end
+puts "Platform: #{ PLATFORM_OS }-#{ PLATFORM_ARCH }"
 
-def make_dep_build_dir (name, cfg)
-    build_dir = File.join(build_dir(cfg), name)
-    mkdir_p build_dir
-    return build_dir
-end
+WINDOWS = PLATFORM_OS == OS_WINDOWS
+MACOSX  = PLATFORM_OS == OS_MACOSX
+LINUX   = PLATFORM_OS == OS_LINUX
+UNIX    = LINUX || MACOSX
 
-#-------------------------------------------------------------------------------
+ARCH_64 = PLATFORM_ARCH == ARCH_AMD64
+ARCH_32 = PLATFORM_ARCH == ARCH_X86
+
+#===============================================================================
 
 BOOL="BOOL"
 STRING="STRING"
@@ -253,48 +241,63 @@ end
 #-------------------------------------------------------------------------------
 
 task :setup do
-    mkdir_p $stage_dir
-    mkdir_p $output_dir
-    mkdir_p $build_dir
+    # Nothing, now.
+end
+
+#-------------------------------------------------------------------------------
+
+def cfg_dir (path, cfg)
+    return "#{path}/#{cfg}"
+end
+
+def  build_dir (cfg) return cfg_dir $build_dir , cfg end
+def output_dir (cfg) return cfg_dir $output_dir, cfg end
+def  stage_dir (cfg) return cfg_dir $stage_dir , cfg end
+
+def cfg_dirs (cfg)
+    return build_dir(cfg), output_dir(cfg), stage_dir(cfg)
+end
+
+def dep (sym, cfg)
+    return "#{sym.to_s}:#{cfg}".intern
+end
+
+#-------------------------------------------------------------------------------
+
+def dep_deps (deps, cfg)
+    ret = []
+    [ :init, *deps ].each do | dep_ |
+        ret << dep(dep_, cfg)
+    end
+    return ret
+end
+
+def dep_val (val, cfg)
+    return {
+         BUILD_DIR =>  build_dir(cfg),
+        OUTPUT_DIR => output_dir(cfg),
+         STAGE_DIR =>  stage_dir(cfg),
+    } [val] || val
+end
+
+def dep_source_dir (name)
+    return File.expand_path name
+#   FIXME: return File.expand_path File.join 'deps', name
+end
+
+def make_dep_build_dir (name, cfg)
+    build_dir = File.join(build_dir(cfg), name)
+    mkdir_p build_dir
+    return build_dir
 end
 
 #-------------------------------------------------------------------------------
 
 CONFIGS.each do | cfg |
-    task dep(:init, cfg) => :setup do
-
-        source_dir = make_dep_build_dir 'platform', cfg
-        build_dir  = File.join source_dir, 'build'
-        output_dir = output_dir cfg
-        stage_dir  = stage_dir cfg
-
-        write_file_in source_dir, 'platform-os.cpp',   PLATFORM_OS_CPP
-        write_file_in source_dir, 'platform-arch.cpp', PLATFORM_ARCH_CPP
-        write_file_in source_dir, 'CMakeLists.txt',    PLATFORM_CMAKELISTS_TXT
-
-        mkdir_p build_dir
-
-        cd build_dir do
-            sh 'cmake',
-                "-G#{$cmake_gen}",
-                "-DCMAKE_BUILD_TYPE:STRING=#{ cmake_build_type cfg }",
-                "-DCMAKE_INSTALL_PREFIX:PATH=#{ stage_dir }",
-                source_dir
-            sh $make_cmd
-            sh $make_cmd, 'install'
-        end
-
-        stage_bin = File.join stage_dir, 'bin'
-        PLATFORM_OS=`#{   File.join stage_bin, 'platform-os'   }`
-        PLATFORM_ARCH=`#{ File.join stage_bin, 'platform-arch' }`
-    end
+    task dep(:init, cfg) => :setup
 end
 
 task :init => dep(:init, DEFAULT_CONFIG)
-
-#-------------------------------------------------------------------------------
-
-task :default => DEFAULT_CONFIG.intern
 
 #-------------------------------------------------------------------------------
 
@@ -327,6 +330,10 @@ task :clean => dep(:clean, DEFAULT_CONFIG )
 task :clear do
     rm_rf [ $build_dir, $output_dir, $stage_dir ]
 end
+
+#-------------------------------------------------------------------------------
+
+task :default => DEFAULT_CONFIG.intern
 
 #-------------------------------------------------------------------------------
 
@@ -381,7 +388,7 @@ cmake_dep :jpeg
 
 cmake_dep :cryptopp
 
-cmake_dep :png, WIN32 ? [ :zlib ] : [], {
+cmake_dep :png, WINDOWS ? [ :zlib ] : [], {
     'PNG_NO_CONSOLE_IO'   => [ BOOL, OFF ],
     'PNG_NO_STDIO'        => [ BOOL, OFF ],
     'NO_VERSION_SUFFIXES' => [ BOOL, ON ],
@@ -420,7 +427,7 @@ cmake_dep :flann, [], {
     'BUILD_C_BINDINGS'      => [ BOOL, OFF ],
     'BUILD_C_BINDINGS'      => [ BOOL, OFF ],
 }.tap { | flags |
-    flags[ 'CMAKE_CXX_FLAGS' ] = [ STRING, "/bigobj" ] if WIN32
+    flags[ 'CMAKE_CXX_FLAGS' ] = [ STRING, "/bigobj" ] if WINDOWS
 }
 
 cmake_dep :qhull, [],
@@ -464,10 +471,12 @@ custom_dep :boost do | name, cfg |
     cd source_dir do
         sh bootstrap
         ENV['NO_COMPRESSION'] = '1'
+
+        # FIXME: b2 --dll-path=#{ rpath() } does not seem to work.
+
         b2_args = [
             "--prefix=#{ path stage_dir }",
             "--build-dir=#{ path build_dir }",
-            "--dll-path=#{ rpath() }",
             '--without-python',
             'address-model=64', # FIXME: Address model should not be hard-coded.
             'threading=multi',
@@ -478,17 +487,56 @@ custom_dep :boost do | name, cfg |
         b2_args << 'install'
         sh b2, *b2_args
     end
+
+    boost_libs = [
+        'chrono',
+        'date_time',
+        'filesystem',
+        'graph',
+        'iostreams',
+        'math_c99',
+        'math_c99f',
+        'math_c99l',
+        'math_tr1',
+        'math_tr1f',
+        'math_tr1l',
+        'prg_exec_monitor',
+        'program_options',
+        'random',
+        'regex',
+        'serialization',
+        'signals',
+        'system',
+        'thread',
+        'unit_test_framework',
+        'wave',
+        'wserialization',
+    ]
+
+    if MACOSX then
+        boost_libs.each do | lib |
+            sh 'install_name_tool', '-id',
+                "#{ MACOSX_RPATH }/libboost_#{ lib }.dylib",
+                "#{ stage_dir }/lib/libboost_#{ lib }.dylib"
+            boost_libs.each do | lib_ |
+                sh 'install_name_tool', '-change',
+                    "libboost_#{ lib }.dylib",
+                    "#{ MACOSX_RPATH }/libboost_#{ lib }.dylib",
+                    "#{ stage_dir }/lib/libboost_#{ lib_ }.dylib"
+            end
+        end
+    end
 end
 
 cmake_dep :vtk, [], {
     'CMAKE_VERBOSE_MAKEFILE' => [ BOOL, ON ],
     'BUILD_TESTING' => [ BOOL, OFF ],
 }.tap { | flags |
-    flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
-    flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
+    flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX and ARCH_64
+    flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX and ARCH_64
 }
 
-cmake_dep :pcl, [ :boost, :eigen, :flann, :qhull, :vtk ] + (WIN32 ? [:png] : [:openni]), {
+cmake_dep :pcl, [ :boost, :eigen, :flann, :qhull, :vtk ] + (WINDOWS ? [:png] : [:openni]), {
 	'BUILD_apps'                  => [ BOOL, OFF ],
     'BUILD_simulation'            => [ BOOL, OFF ],
     'BUILD_outofcore'             => [ BOOL, OFF ],
@@ -520,13 +568,13 @@ cmake_dep :pcl, [ :boost, :eigen, :flann, :qhull, :vtk ] + (WIN32 ? [:png] : [:o
     'PCL_SHARED_LIBS'             => [ BOOL, (not USE_STATIC_LIBRARIES) ],
     'PCL_ONLY_CORE_POINT_TYPES'   => [ BOOL, ON  ],
 }.tap { | flags |
-    flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
-    flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
+    flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX and ARCH_64
+    flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX and ARCH_64
 }
 
 #, [ '--trace' ]
 
-cmake_dep :opencv, [] + (WIN32 ? [:png] : []), {
+cmake_dep :opencv, [] + (WINDOWS ? [:png] : []), {
     'CMAKE_BUILD_TYPE'               => [ STRING, "Release" ], # relwithdeinfo is not supported
     'BUILD_SHARED_LIBS'              => [ BOOL  , (not USE_STATIC_LIBRARIES) ],
     'BUILD_WITH_STATIC_CRT'          => [ BOOL  , OFF ],
@@ -537,15 +585,16 @@ cmake_dep :opencv, [] + (WIN32 ? [:png] : []), {
     'WITH_EIGEN'                     => [ BOOL  , OFF ],
     'CMAKE_LINK_INTERFACE_LIBRARIES' => [ STRING, "" ],
 }.tap { | flags |
-    flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
-    flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX # FIXME: x86_64 only.
+    flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX and ARCH_64
+    flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX and ARCH_64
 }
 
 # FIXME: Properly dispatch on actual config.
-custom_dep :qt do | name, cfg |
+custom_dep :qt, [:openssl] do | name, cfg |
     source_dir = dep_source_dir name
-     build_dir = make_dep_build_dir name, cfg
-     stage_dir = stage_dir cfg
+    stage_dir = stage_dir cfg
+	build_dir = make_dep_build_dir name, cfg
+    mkdir_p build_dir
 
     def qt_config (cfg)
         return {
@@ -561,11 +610,12 @@ custom_dep :qt do | name, cfg |
         next
     end
 
-    if WIN32 then
+    if WINDOWS then
         cd build_dir do
             # FIXME: Do 32/64 bit dispatch.
             # FIXME: Properly install products in stage.
-            sh "#{ source_dir }/build-qt-windows-msvc10.cmd", 'amd64', (qt_config cfg)
+            sh "#{ source_dir }/build-qt-windows-msvc10.cmd", 'amd64', (qt_config cfg), stage_dir
+			cp_r "#{ build_dir }/bin/qmake.exe", "#{ stage_dir }/bin/qmake.exe"
         end
     elsif UNIX then
         cd build_dir do
@@ -583,13 +633,13 @@ end
 # FIXME: Ruby does not compile on 64 bit target architectures.
 
 custom_dep :ruby do | name, cfg |
-    if PLATFORM_ARCH == 'x86'
+    if ARCH_32
         source_dir = File.expand_path name
          build_dir = make_dep_build_dir name, cfg
          stage_dir = stage_dir cfg
 
         add_env_path "#{ path(source_dir) }\\win32\\bin"
-        if WIN32 then
+        if WINDOWS then
             cd build_dir do
                 sh "#{source_dir}/win32/configure.bat"
                 edit_file("#{ build_dir }/Makefile", /^RT = msvcr\d+/, 'RT = msvcrt')
@@ -614,7 +664,7 @@ custom_dep :qt3d, [ :qt ] do | name, cfg |
      build_dir = make_dep_build_dir name, cfg
      stage_dir = stage_dir cfg
 
-    if WIN32 then
+    if WINDOWS then
         # FIXME: Have qt properly stage itself on windows.
         qmake_path  = "#{ make_dep_build_dir('qt', cfg) }/bin/qmake.exe"
     else
@@ -637,12 +687,12 @@ custom_dep :openssl do | name, cfg |
     # Remove this if you find out how to perform out-of-source openssl builds.
     cp_r source_dir, build_dir(cfg)
 
-    if WIN32 then
+    if WINDOWS then
         cd build_dir do
-            if PLATFORM_ARCH == 'x86' then
-                sh 'perl', "./Configure", 'VC-WIN32', 'no-asm', "--prefix=#{ stage_dir }"
+            if ARCH_32 then
+                sh 'perl', "./Configure", 'VC-WINDOWS', 'no-asm', "--prefix=#{ stage_dir }"
                 sh "ms/do_ms"
-            elsif PLATFORM_ARCH == 'x64' then
+            elsif ARCH_64 then
                 sh 'perl', "./Configure", 'VC-WIN64A', 'no-asm', "--prefix=#{ stage_dir }"
                 sh "ms/do_win64a"
             end
@@ -674,15 +724,15 @@ deps [
     :qt3d,
     :quazip,
     :cryptopp,
-    :openssl
-#   :opengm
+    :openssl,
+    :opengm
 ].tap { | list |
-    list << :png          if WIN32
-    list << :zlib         if WIN32
-    list << :openni       if not WIN32
-    list << :primesensor  if not WIN32
-    list << :sensorkinect if not WIN32
-    list << :nite         if not WIN32
+    list << :png          if WINDOWS
+    list << :zlib         if WINDOWS
+    list << :openni       if not WINDOWS
+    list << :primesensor  if not WINDOWS
+    list << :sensorkinect if not WINDOWS
+    list << :nite         if not WINDOWS
     list << :stk          if not LINUX
 }
 
