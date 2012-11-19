@@ -294,7 +294,7 @@ Aliases:
     minsizerel     =>   all:minsizerel
 
 Deps:
-    #{ $deps.join "\n    " }
+    #{ $deps.sort.join "\n    " }
 EOF
 end
 
