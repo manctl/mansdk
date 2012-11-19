@@ -464,7 +464,7 @@ cmake_dep :zlib, [], {
  }.tap { | flags |
     flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX and ARCH_64
     flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX and ARCH_64
-}
+} if not LINUX
 
 cmake_dep :portaudio, [], {
     'PA_DLL_LINK_WITH_STATIC_RUNTIME' => [ BOOL, OFF ],
@@ -491,7 +491,7 @@ cmake_dep :opengm, [ :boost ], {
     'BUILD_TESTING'   => [ BOOL, OFF ],
 }
 
-cmake_dep :quazip, [ :qt, :zlib ]
+cmake_dep :quazip, [ :qt ] + (LINUX ? [] : [:zlib ])
 
 cmake_dep :g2o, [ :eigen ] if not WINDOWS
 
