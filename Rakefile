@@ -26,20 +26,36 @@ def files_exist_in (dir, *files)
     return ret
 end
 
-def add_env_path (path) ENV['PATH'] += File::PATH_SEPARATOR + path end
+def add_env_path (path) ENV['PATH'] += File::PATH_SEPARATOR + native_path(path) end
 
-# Ruby's cp_r is kinda broken when copying symbolic links.
+def native_path (path)
+    case RUBY_PLATFORM
+        when /linux|darwin/  then return path
+        when /win32|mingw32/ then return path.gsub('/', '\\')
+        else raise UNKNOWN_PLATFORM
+    end
+end
+
+case RUBY_PLATFORM
+    when /linux|darwin/  then EXE_SUFFIX = ''
+    when /win32|mingw32/ then EXE_SUFFIX = '.exe'
+    else raise UNKNOWN_PLATFORM
+end
+
+def exe (path)
+    return path + EXE_SUFFIX
+end
+
+# Ruby's cp_r is kinda broken on Unix when copying symbolic links on unix.
 # Fall back to platform-specific replacements.
 def mirror_dirs (source_dir, target_dir)
-    # Skip hidden source files.
+    # Skip hidden root source dir files by default.
     source_files = Dir.glob File.join(source_dir, '*')
     case RUBY_PLATFORM
         when /linux|darwin/  then
             source_files.each { | source_file | sh 'cp', '-a', source_file, target_dir }
-        when /win32|mingw32/ then
-            source_files.each { | source_file | sh 'xcopy', '/Y', '/Q', source_file, target_dir }
         else
-            raise UNKNOWN_PLATFORM
+            cp_r source_files, target_dir, :preserve => true
     end
 end
 
@@ -153,16 +169,12 @@ begin
             $cmake_gen  = 'Unix Makefiles'
             $make_cmd   = 'make'
             $make_flags = [] + MAKE_FLAGS
-            def exe  (str) return str end
-            def path (str) return str end
         when /win32|mingw32/ then
             $cmake_gen  = 'NMake Makefiles JOM'
             $jom_dir =  File.join HERE, 'core', 'deps', 'jom'
             add_env_path $jom_dir
             $make_cmd = 'nmake'
             $make_flags = [] + MAKE_FLAGS
-            def exe  (str) return str + '.exe' end
-            def path (str) return str.gsub('/', '\\') end
         else
             raise UNKOWN_PLATFORM
     end
@@ -533,11 +545,9 @@ custom_dep :boost do | name, cfg |
     if UNIX then
         bootstrap = './bootstrap.sh'
         b2 = './b2'
-        def path (str) return str end
     else
         bootstrap = 'bootstrap.bat'
         b2 = 'b2.exe'
-        def path (str) return str.gsub '/', '\\' end
     end
 
     def boost_build_variant (cfg)
@@ -556,8 +566,8 @@ custom_dep :boost do | name, cfg |
         # FIXME: b2 --dll-path=#{ rpath() } does not seem to work.
 
         b2_args = [
-            "--prefix=#{ path stage_dir }",
-            "--build-dir=#{ path build_dir }",
+            "--prefix=#{ native_path stage_dir }",
+            "--build-dir=#{ native_path build_dir }",
             '--without-python',
             'address-model=64', # FIXME: Address model should not be hard-coded.
             'threading=multi',
@@ -743,7 +753,7 @@ custom_dep :ruby do | name, cfg |
      build_dir = make_dep_build_dir name, cfg
      stage_dir = stage_dir cfg
 
-    add_env_path "#{ path(source_dir) }\\win32\\bin"
+    add_env_path source_dir + '/win32/bin'
     if WINDOWS then
         cd build_dir do
             sh "#{source_dir}/win32/configure.bat"
