@@ -1,6 +1,8 @@
 #-------------------------------------------------------------------------------
 # Library
 
+HERE = File.dirname File.expand_path __FILE__
+
 def write_file (path, contents)
     file = File.new(path, "w")
     file << contents
@@ -44,7 +46,7 @@ LINUX_RPATH      = "\$ORIGIN/../lib"
 #-------------------------------------------------------------------------------
 # Directories
 
-def prefixed (path) return PREFIX ? File.join(PREFIX, path) : path end
+def prefixed (path) return File.join(PREFIX ? PREFIX : HERE, path) end
 
  $build_dir = File.expand_path prefixed BUILD
 $output_dir = File.expand_path prefixed OUTPUT
@@ -136,7 +138,7 @@ begin
             def path (str) return str end
         when /win32|mingw32/ then
             $cmake_gen  = 'NMake Makefiles'
-            $make_cmd   = 'jom' # Much faster on windows than nmake.
+            $make_cmd   = File.join HERE, 'core', 'deps', 'jom', 'jom.exe'
             $make_flags = [] + MAKE_FLAGS
             def exe  (str) return str + '.exe' end
             def path (str) return str.gsub('/', '\\') end
