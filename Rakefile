@@ -201,7 +201,7 @@ begin
             $cmake_gen  = 'NMake Makefiles JOM'
             $jom_dir =  File.join HERE, 'core', 'deps', 'jom'
             add_env_path $jom_dir
-            $make_cmd = 'nmake'
+            $make_cmd = 'jom'
             $make_flags = [] + MAKE_FLAGS
         else
             raise UNKOWN_PLATFORM
