@@ -697,6 +697,7 @@ cmake_dep :pcl, [ :boost, :eigen, :flann, :qhull, :qt, :vtk ] + (WINDOWS ? [ :pn
 	'BUILD_apps'                  => [ BOOL, OFF ],
     'BUILD_simulation'            => [ BOOL, OFF ],
     'BUILD_outofcore'             => [ BOOL, OFF ],
+    'BUILD_gpu_kinfu'             => [ BOOL, ON  ],
     'BUILD_gpu_kinfu_large_scale' => [ BOOL, OFF ],
     'BUILD_GPU'                   => [ BOOL, ON  ],
     'BUILD_CUDA'                  => [ BOOL, ON  ],
