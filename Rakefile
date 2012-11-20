@@ -211,10 +211,6 @@ begin
 
     unless files_exist_in stage_bin, exe('platform-os'), exe('platform-arch')
 
-        mkdir_p $stage_dir
-        mkdir_p $output_dir
-        mkdir_p $build_dir
-
         source_dir = make_build_subdir 'platform'
         build_dir  = make_build_subdir 'platform/build'
         stage_dir  = make_stage_subdir 'platform'
@@ -272,19 +268,6 @@ def sym_append (sym, *suffixes)
     return name.intern
 end
 
-def cfg_dir (path, cfg)
-    return "#{path}/#{cfg}"
-end
-
-def  build_dir (cfg) return cfg_dir $build_dir , cfg end
-def output_dir (cfg) return cfg_dir $output_dir, cfg end
-def  stage_dir (cfg) return cfg_dir $stage_dir , cfg end
-
-def cfg_dirs (cfg)
-    return build_dir(cfg), output_dir(cfg), stage_dir(cfg)
-end
-
-
 def cfg_sym (sym, cfg, *suffixes)
     return sym_append(sym, ':', cfg, *suffixes)
 end
@@ -292,6 +275,13 @@ end
 def cfg_name (cfg)
     return CONFIGS[cfg]
 end
+
+def  cfg_build_dir (cfg) return  build_subdir cfg_name cfg end
+def cfg_output_dir (cfg) return output_subdir cfg_name cfg end
+def  cfg_stage_dir (cfg) return  stage_subdir cfg_name cfg end
+
+def make_cfg_output_dir (cfg) ret = cfg_output_dir cfg; mkdir_p ret; return ret end
+def  make_cfg_stage_dir (cfg) ret =  cfg_stage_dir cfg; mkdir_p ret; return ret end
 
 #-------------------------------------------------------------------------------
 # Tasks
@@ -316,9 +306,9 @@ CFGS.each_value do | cfg |
 
     task cfg_sym(:clear, cfg) do
         rm_rf [
-             build_dir(cfg),
-            output_dir(cfg),
-             stage_dir(cfg),
+              cfg_build_dir(cfg),
+             cfg_output_dir(cfg),
+              cfg_stage_dir(cfg),
         ]
     end
 
@@ -349,39 +339,43 @@ Platform:
 
 Variables:
 
-    PREFIX     = #{ PREFIX }
-    CFG        = #{ CFG }
-    CONFIG     = #{ CONFIG }
-    MAKE_FLAGS = #{ MAKE_FLAGS }
-    VERBOSE    = #{ VERBOSE }
-    BUILD      = #{ BUILD }
-    OUTPUT     = #{ OUTPUT }
-    STAGE      = #{ STAGE }
+    PREFIX       = #{ PREFIX }
+    CFG / CONFIG = #{ CFG } / #{ CONFIG }
+    MAKE_FLAGS   = #{ MAKE_FLAGS }
+    VERBOSE      = #{ VERBOSE }
+    BUILD        = #{ BUILD }
+    OUTPUT       = #{ OUTPUT }
+    STAGE        = #{ STAGE }
 
 Targets:
 
                                 all[:#{ CFGS.values().join '|:' }]
-    <dep>[-<only|clear|clear-only>][:#{ CFGS.values().join '|:' }]
+    <dep>[-only|-clear|-clear-only][:#{ CFGS.values().join '|:' }]
                               clear[:#{ CFGS.values().join '|:' }]
                                help
                                wipe
 
 Aliases:
 
-    <dep>          => <dep>:#{ CFG }
+    <dep> => <dep>:#{ CFG }
 
-    all            =>   all:#{ CFG }
-    clear          => clear:#{ CFG }
+    all   =>   all:#{ CFG }
+    clear => clear:#{ CFG }
 
-    debug          =>   all:#{ CFG_D  }
-    release        =>   all:#{ CFG_R  }
-    relwithdebinfo =>   all:#{ CFG_RD }
-    minsizerel     =>   all:#{ CFG_M  }
+    D     =>   all:#{ CFG_D  }
+    R     =>   all:#{ CFG_R  }
+    RD    =>   all:#{ CFG_RD }
+    M     =>   all:#{ CFG_M  }
 
     #{ DEBUG }          => #{ CFG_D  }
     #{ RELEASE }        => #{ CFG_R  }
     #{ RELWITHDEBINFO } => #{ CFG_RD }
     #{ MINSIZEREL }     => #{ CFG_M  }
+
+    <dep>*:#{ DEBUG }          => <dep>:#{ CFG_D  }
+    <dep>*:#{ RELEASE }        => <dep>:#{ CFG_R  }
+    <dep>*:#{ RELWITHDEBINFO } => <dep>:#{ CFG_RD }
+    <dep>*:#{ MINSIZEREL }     => <dep>:#{ CFG_M  }
 
 Deps:
 
@@ -391,28 +385,6 @@ end
 
 #-------------------------------------------------------------------------------
 # Deps
-
-def dep_deps (deps, cfg, suffix = '')
-    ret = [ ]
-    deps.each do | dep_ |
-        ret << cfg_sym(sym_append(dep_, suffix), cfg)
-    end
-    return ret
-end
-
-def dep_source_dir (name)
-    return File.expand_path File.join 'deps', name
-end
-
-def dep_build_dir (name, cfg)
-    return File.join(build_dir(cfg), name)
-end
-
-def make_dep_build_dir (name, cfg)
-    build_dir = dep_build_dir(name, cfg)
-    mkdir_p build_dir
-    return build_dir
-end
 
 def custom_dep (sym, deps = [], &blk)
     name       = sym.to_s
@@ -452,6 +424,37 @@ def custom_dep (sym, deps = [], &blk)
     $deps << name
 end
 
+def dep_deps (deps, cfg, suffix = '')
+    ret = [ ]
+    deps.each do | dep_ |
+        ret << cfg_sym(sym_append(dep_, suffix), cfg)
+    end
+    return ret
+end
+
+def dep_source_dir (name)
+    return File.expand_path File.join 'deps', name
+end
+
+def dep_build_dir (name, cfg)
+    return File.join(cfg_build_dir(cfg), name)
+end
+
+def make_dep_build_dir (name, cfg)
+    build_dir = dep_build_dir(name, cfg)
+    mkdir_p build_dir
+    return build_dir
+end
+
+def dep_dirs (name, cfg)
+    return {
+        :source => dep_source_dir(name),
+        :build  => make_dep_build_dir(name, cfg),
+        :output => make_cfg_output_dir(cfg),
+        :stage  => make_cfg_stage_dir(cfg),
+    }
+end
+
 #-------------------------------------------------------------------------------
 # CMake Deps
 
@@ -466,17 +469,17 @@ INTERNAL ="INTERNAL"
 ON = "ON"
 OFF = "OFF"
 
- DEP_BUILD_DIR= "__BUILD_DIR__"
+ DEP_BUILD_DIR="__BUILD_DIR__"
 DEP_OUTPUT_DIR="__OUTPUT_DIR__"
- DEP_STAGE_DIR= "__STAGE_DIR__"
+ DEP_STAGE_DIR="__STAGE_DIR__"
 
 # CMake Definitions Expansions
 
-def cmake_def_val (val, cfg)
+def cmake_def_val (val, name, cfg)
     return {
-         DEP_BUILD_DIR =>  build_dir(cfg),
-        DEP_OUTPUT_DIR => output_dir(cfg),
-         DEP_STAGE_DIR =>  stage_dir(cfg),
+         DEP_BUILD_DIR =>  dep_build_dir(name, cfg),
+        DEP_OUTPUT_DIR => cfg_output_dir(      cfg),
+         DEP_STAGE_DIR =>  cfg_stage_dir(      cfg),
     } [val] || val
 end
 
@@ -490,24 +493,23 @@ def cmake_build_type (cfg)
 end
 
 def cmake_build (name, cfg, extra_defs = {}, extra_args = [])
-    source_dir = dep_source_dir name
-    output_dir = output_dir cfg
-    stage_dir  = stage_dir cfg
 
-    cd make_dep_build_dir name, cfg do
+    dirs = dep_dirs name, cfg
+
+    cd dirs[:build] do
         cmake_args = [
             "-DCMAKE_GENERATOR:STRING=#{ $cmake_gen }",
             "-DCMAKE_BUILD_TYPE:STRING=#{ cmake_build_type cfg }",
-            "-DCMAKE_INSTALL_PREFIX:PATH=#{ stage_dir }",
-            "-DCMAKE_PREFIX_PATH:PATH=#{ stage_dir }",
-            "-DCMAKE_FIND_ROOT_PATH:PATH=#{ stage_dir }",
+            "-DCMAKE_INSTALL_PREFIX:PATH=#{ dirs[:stage] }",
+            "-DCMAKE_PREFIX_PATH:PATH=#{ dirs[:stage] }",
+            "-DCMAKE_FIND_ROOT_PATH:PATH=#{ dirs[:stage] }",
             "-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE:STRING=BOTH",
             "-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY:STRING=BOTH",
             "-DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM:STRING=BOTH",
-            "-DOUTPUT_DIRECTORY:PATH=#{ output_dir }",
-            "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=#{ output_dir }/bin",
-            "-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=#{ output_dir }/lib",
-            "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=#{ output_dir }/lib",
+            "-DOUTPUT_DIRECTORY:PATH=#{ dirs[:output] }",
+            "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=#{ dirs[:output] }/bin",
+            "-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=#{ dirs[:output] }/lib",
+            "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=#{ dirs[:output] }/lib",
             "-DCMAKE_VERBOSE_MAKEFILE:BOOL=#{ VERBOSE }"
         ]
 
@@ -515,14 +517,14 @@ def cmake_build (name, cfg, extra_defs = {}, extra_args = [])
         cmake_args << "-DCMAKE_INSTALL_RPATH:STRING=#{     LINUX_RPATH }" if LINUX
 
         extra_defs.each do | def_name, def_type_val |
-            cmake_args << "-D#{ def_name }:#{ def_type_val[0] }=#{ cmake_def_val(def_type_val[1], cfg) }"
+            cmake_args << "-D#{ def_name }:#{ def_type_val[0] }=#{ cmake_def_val(def_type_val[1], name, cfg) }"
         end
 
         extra_args.each do | arg |
             cmake_args << arg
         end
 
-        cmake_args << source_dir
+        cmake_args << dirs[:source]
 
         sh 'cmake', *cmake_args
         sh $make_cmd, *$make_flags
@@ -604,9 +606,7 @@ cmake_dep :qhull, [], {}.tap { | flags |
 
 custom_dep :boost do | name, cfg |
 
-    source_dir = dep_source_dir name
-    build_dir  = make_dep_build_dir name, cfg
-    stage_dir  = stage_dir cfg
+    dirs = dep_dirs name, cfg
 
     if UNIX then
         bootstrap = './bootstrap.sh'
@@ -625,19 +625,19 @@ custom_dep :boost do | name, cfg |
         } [cfg]
     end
 
-    cd source_dir do
+    cd dirs[:source] do
         sh bootstrap
         ENV['NO_COMPRESSION'] = '1'
 
         # FIXME: b2 --dll-path=#{ rpath() } does not seem to work.
 
         b2_args = [
-            "--prefix=#{ native_path stage_dir }",
-            "--build-dir=#{ native_path build_dir }",
+            "--prefix=#{    native_path dirs[:stage] }",
+            "--build-dir=#{ native_path dirs[:build] }",
             '--without-python',
             'address-model=64', # FIXME: Address model should not be hard-coded.
             'threading=multi',
-            "variant=#{boost_build_variant(cfg)}",
+            "variant=#{ boost_build_variant(cfg) }",
         ]
         b2_args << 'link=static' if STATIC_LIBRARIES
         b2_args << 'cxxflags=-fPIC' if LINUX and ARCH_64
@@ -673,13 +673,13 @@ custom_dep :boost do | name, cfg |
     if MACOSX then
         boost_libs.each do | lib |
             sh 'install_name_tool', '-id',
-                "#{ MACOSX_RPATH  }/libboost_#{ lib }.dylib",
-                "#{ stage_dir }/lib/libboost_#{ lib }.dylib"
+                "#{ MACOSX_RPATH     }/libboost_#{ lib }.dylib",
+                "#{ dirs[:stage] }/lib/libboost_#{ lib }.dylib"
             boost_libs.each do | lib_ |
                 sh 'install_name_tool', '-change',
-                                       "libboost_#{ lib }.dylib",
-                    "#{ MACOSX_RPATH  }/libboost_#{ lib }.dylib",
-                    "#{ stage_dir }/lib/libboost_#{ lib_ }.dylib"
+                                          "libboost_#{ lib }.dylib",
+                    "#{ MACOSX_RPATH     }/libboost_#{ lib }.dylib",
+                    "#{ dirs[:stage] }/lib/libboost_#{ lib_ }.dylib"
             end
         end
     end
@@ -747,28 +747,27 @@ cmake_dep :opencv, [] + (WINDOWS ? [ :png ] : []), {
 }
 
 custom_dep :openssl do | name, cfg |
-    source_dir = dep_source_dir name
-     build_dir = make_dep_build_dir name, cfg
-     stage_dir = stage_dir cfg
+
+    dirs = dep_dirs name, cfg
 
     # Remove this if you find out how to perform out-of-source openssl builds.
-    mirror_dirs source_dir, build_dir
+    mirror_dirs dirs[:source], dirs[:build]
 
     if WINDOWS then
-        cd build_dir do
+        cd dirs[:build] do
             if ARCH_32 then
-                sh 'perl', "./Configure", 'VC-WINDOWS', 'no-asm', "--prefix=#{ stage_dir }"
+                sh 'perl', "./Configure", 'VC-WINDOWS', 'no-asm', "--prefix=#{ dirs[:stage] }"
                 sh "ms/do_ms"
             elsif ARCH_64 then
-                sh 'perl', "./Configure", 'VC-WIN64A', 'no-asm', "--prefix=#{ stage_dir }"
+                sh 'perl', "./Configure", 'VC-WIN64A', 'no-asm', "--prefix=#{ dirs[:stage] }"
                 sh "ms/do_win64a"
             end
             sh 'nmake', '-f', 'ms/ntdll.mak'
             sh 'nmake', '-f', 'ms/ntdll.mak', 'install'
         end
     else
-        cd build_dir do
-             sh "./config", "--prefix=#{ stage_dir }"
+        cd dirs[:build] do
+             sh "./config", "--prefix=#{ dirs[:stage] }"
              sh 'make'
              sh 'make', 'install'
         end
@@ -777,10 +776,8 @@ end
 
 # FIXME: Properly dispatch on actual config.
 custom_dep :qt, [ :openssl ] do | name, cfg |
-    source_dir = dep_source_dir name
-    stage_dir = stage_dir cfg
-	build_dir = make_dep_build_dir name, cfg
-    mkdir_p build_dir
+
+    dirs = dep_dirs name, cfg
 
     def qt_config (cfg)
         return {
@@ -792,21 +789,21 @@ custom_dep :qt, [ :openssl ] do | name, cfg |
     end
 
     # FIXME: Ugly hack to avoid building qt every time.
-    if File.exists? "#{ build_dir }/.qmake.cache" then
+    if File.exists? "#{ dirs[:build] }/.qmake.cache" then
         next
     end
 
     if WINDOWS then
-        cd build_dir do
+        cd dirs[:build] do
             # FIXME: Do 32/64 bit dispatch.
             # FIXME: Properly install products in stage.
-            sh "#{ source_dir }/build-qt-windows-msvc10.cmd", 'amd64', (qt_config cfg), stage_dir
-			cp_r "#{ build_dir }/bin/qmake.exe", "#{ stage_dir }/bin/qmake.exe"
+            sh "#{ dirs[:source] }/build-qt-windows-msvc10.cmd", 'amd64', (qt_config cfg), dirs[:stage]
+            cp_r "#{ dirs[:build] }/bin/qmake.exe", "#{ dirs[:stage] }/bin/qmake.exe"
         end
     elsif UNIX then
-        cd build_dir do
+        cd dirs[:build] do
             # FIXME: Do 32/64 bit dispatch.
-            sh "#{ source_dir }/build-qt-unix-make.sh", 'amd64', (qt_config cfg), stage_dir
+            sh "#{ dirs[:source] }/build-qt-unix-make.sh", 'amd64', (qt_config cfg), dirs[:stage]
         end
     end
 end
@@ -815,24 +812,24 @@ end
 # FIXME: Ruby does not compile on 64 bit target architectures.
 
 custom_dep :ruby do | name, cfg |
-    source_dir = dep_source_dir name
-     build_dir = make_dep_build_dir name, cfg
-     stage_dir = stage_dir cfg
+
+    dirs = dep_dirs name, cfg
 
     add_env_path source_dir + '/win32/bin'
+
     if WINDOWS then
-        cd build_dir do
-            sh "#{source_dir}/win32/configure.bat"
-            edit_file("#{ build_dir }/Makefile", /^RT = msvcr\d+/, 'RT = msvcrt')
+        cd dirs[:build] do
+            sh "#{ dirs[:source] }/win32/configure.bat"
+            edit_file("#{ dirs[:build] }/Makefile", /^RT = msvcr\d+/, 'RT = msvcrt')
             sh 'nmake'
-            sh 'nmake', "DESTDIR=#{ stage_dir }", 'install', 'install-lib'
+            sh 'nmake', "DESTDIR=#{ dirs[:stage] }", 'install', 'install-lib'
         end
     else
-        cd source_dir do
+        cd dirs[:source] do
              sh 'autoconf'
         end
-        cd build_dir do
-             sh "#{ source_dir }/configure", "--prefix=#{ stage_dir }"
+        cd dirs[:build] do
+             sh "#{ dirs[:source] }/configure", "--prefix=#{ dirs[:stage] }"
              sh 'make'
              sh 'make', 'install', 'install-lib'
         end
@@ -840,21 +837,22 @@ custom_dep :ruby do | name, cfg |
 end if ARCH_32
 
 custom_dep :qt3d, [ :qt ] do | name, cfg |
-    source_dir = dep_source_dir name
-     build_dir = make_dep_build_dir name, cfg
-     stage_dir = stage_dir cfg
+
+    dirs = dep_dirs name, cfg
 
     if WINDOWS then
         # FIXME: Have qt properly stage itself on windows.
-        qmake_path  = "#{ make_dep_build_dir('qt', cfg) }/bin/qmake.exe"
+        qmake_path  = "#{ dep_build_dir('qt', cfg) }/bin/qmake.exe"
     else
-        qmake_path  = "#{ stage_dir }/bin/qmake"
+        qmake_path  = "#{ dirs[:stage] }/bin/qmake"
     end
-    project_path = "#{ source_dir }/qt3d.pro"
-    cd build_dir do
+
+    project_path = "#{ dirs[:source] }/qt3d.pro"
+
+    cd dirs[:build] do
         # FIXME: Honor build configuration.
-        sh qmake_path, '-d', "PREFIX=#{ stage_dir }", project_path
+        sh qmake_path, '-d', "PREFIX=#{ dirs[:stage] }", project_path
         sh $make_cmd, *$make_flags
-        sh $make_cmd, "INSTALL_ROOT=#{ stage_dir }", 'install'
+        sh $make_cmd, "INSTALL_ROOT=#{ dirs[:stage] }", 'install'
     end
 end if not WINDOWS # Fails at install on Windows.
