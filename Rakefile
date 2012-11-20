@@ -1,3 +1,9 @@
+NAME  = 'ManSDK'
+MAJOR = 0
+MINOR = 1
+VERSION = "#{MAJOR}.#{MINOR}"
+TITLE   = "#{NAME} #{VERSION}"
+
 #-------------------------------------------------------------------------------
 # Library
 
@@ -60,23 +66,45 @@ def mirror_dirs (source_dir, target_dir)
 end
 
 #-------------------------------------------------------------------------------
+# Constants
+
+CFG_D = 'D'    ; CFG_R   = 'R'      ; CFG_RD         = 'RD'            ; CFG_M      = 'M';
+DEBUG = 'debug'; RELEASE = 'release'; RELWITHDEBINFO = 'relwithdebinfo'; MINSIZEREL = 'minsizerel';
+CFGS = {
+    DEBUG          => CFG_D,
+    RELEASE        => CFG_R,
+    RELWITHDEBINFO => CFG_RD,
+    MINSIZEREL     => CFG_M,
+}
+CONFIGS = {
+    CFG_D  => DEBUG,
+    CFG_R  => RELEASE,
+    CFG_RD => RELWITHDEBINFO,
+    CFG_M  => MINSIZEREL,
+}
+
+STATIC_LIBRARIES = false
+
+MACOSX_RPATH     = "@loader_path/../lib"
+LINUX_RPATH      = "\$ORIGIN/../lib"
+
+#-------------------------------------------------------------------------------
 # Defaults
 
 PREFIX     =  ENV['PREFIX'] || nil
-CONFIG     =  ENV['CONFIG'] || "relwithdebinfo"
+CONFIG     =  ENV['CONFIG'] || CONFIGS[CFG_RD]
 MAKE_FLAGS = (ENV['MAKE_FLAGS'] || '').split ' '
 VERBOSE    =  ENV['VERBOSE'] || "OFF"
 BUILD      =  ENV['BUILD' ] || 'build'
 OUTPUT     =  ENV['OUTPUT'] || 'output'
 STAGE      =  ENV['STAGE' ] || 'stage'
 
-#-------------------------------------------------------------------------------
-# Constants
-
-CONFIGS          = [ "debug", "release", "relwithdebinfo", "minsizerel" ]
-STATIC_LIBRARIES = false
-MACOSX_RPATH     = "@loader_path/../lib"
-LINUX_RPATH      = "\$ORIGIN/../lib"
+if ENV['CFG'] then
+    CFG  = ENV['CFG']
+    CONFIG = CONFIGS[CFG]
+else
+    CFG = CFGS[CONFIG]
+end
 
 #-------------------------------------------------------------------------------
 # Directories
@@ -208,10 +236,12 @@ begin
 
     PLATFORM_OS_BIN   = File.join stage_bin, 'platform-os'
     PLATFORM_ARCH_BIN = File.join stage_bin, 'platform-arch'
+
+    PLATFORM_OS   = `#{ PLATFORM_OS_BIN   }`.strip
+    PLATFORM_ARCH = `#{ PLATFORM_ARCH_BIN }`.strip
 end
 
-PLATFORM_OS   = `#{ PLATFORM_OS_BIN   }`.strip
-PLATFORM_ARCH = `#{ PLATFORM_ARCH_BIN }`.strip
+#-------------------------------------------------------------------------------
 
 # Platform-specific Keywords
 
@@ -236,6 +266,12 @@ end
 #-------------------------------------------------------------------------------
 # Configs
 
+def sym_append (sym, *suffixes)
+    name = sym.to_s
+    suffixes.each { | suffix | name += suffix.to_s }
+    return name.intern
+end
+
 def cfg_dir (path, cfg)
     return "#{path}/#{cfg}"
 end
@@ -248,14 +284,13 @@ def cfg_dirs (cfg)
     return build_dir(cfg), output_dir(cfg), stage_dir(cfg)
 end
 
-def sym_append (sym, *suffixes)
-    name = sym.to_s
-    suffixes.each { | suffix | name += suffix.to_s }
-    return name.intern
-end
 
 def cfg_sym (sym, cfg, *suffixes)
-    return sym_append(sym, ":", cfg, *suffixes)
+    return sym_append(sym, ':', cfg, *suffixes)
+end
+
+def cfg_name (cfg)
+    return CONFIGS[cfg]
 end
 
 #-------------------------------------------------------------------------------
@@ -265,15 +300,13 @@ $deps = []
 
 task :default => :all
 
-task :all => cfg_sym(:all, CONFIG)
+task :all => cfg_sym(:all, CFG)
 
-task :pack => cfg_sym(:pack, CONFIG)
+task :pack => cfg_sym(:pack, CFG)
 
-task :clear => cfg_sym(:clear, CONFIG )
+task :clear => cfg_sym(:clear, CFG)
 
-CONFIGS.each do | cfg |
-
-    task cfg => cfg_sym(:all, cfg)
+CFGS.each_value do | cfg |
 
     task cfg_sym(:pack, cfg) => cfg_sym(:all, cfg) do
         cd stage_dir cfg do
@@ -288,6 +321,12 @@ CONFIGS.each do | cfg |
              stage_dir(cfg),
         ]
     end
+
+    # Aliases
+    task cfg                            => cfg_sym(:all, cfg)
+    task                 cfg_name(cfg)  => cfg
+    task cfg_sym(:pack , cfg_name(cfg)) => cfg_sym(:pack , cfg)
+    task cfg_sym(:clear, cfg_name(cfg)) => cfg_sym(:clear, cfg)
 end
 
 task :wipe do
@@ -295,12 +334,23 @@ task :wipe do
 end
 
 task :help do
-puts <<EOF
+
+    def half (x) return x / 2 end
+    def centered (w, str) return ' ' * half(w - str.length) + str end
+
+    puts <<EOF
+
+#{ centered(80,       TITLE) }
+#{ centered(80, '-' * TITLE.length) }
+
 Platform:
+
     #{ PLATFORM_OS }-#{ PLATFORM_ARCH }
 
 Variables:
+
     PREFIX     = #{ PREFIX }
+    CFG        = #{ CFG }
     CONFIG     = #{ CONFIG }
     MAKE_FLAGS = #{ MAKE_FLAGS }
     VERBOSE    = #{ VERBOSE }
@@ -309,22 +359,32 @@ Variables:
     STAGE      = #{ STAGE }
 
 Targets:
-                                all[:#{ CONFIGS.join '|:' }]
-    <dep>[-<only|clear|clear-only>][:#{ CONFIGS.join '|:' }]
-                              clear[:#{ CONFIGS.join '|:' }]
+
+                                all[:#{ CFGS.values().join '|:' }]
+    <dep>[-<only|clear|clear-only>][:#{ CFGS.values().join '|:' }]
+                              clear[:#{ CFGS.values().join '|:' }]
                                help
                                wipe
 
 Aliases:
-    all            =>   all:#{ CONFIG }
-    <dep>          => <dep>:#{ CONFIG }
-    clear          => clear:#{ CONFIG }
-    debug          =>   all:debug
-    release        =>   all:release
-    relwithdebinfo =>   all:relwithdebinfo
-    minsizerel     =>   all:minsizerel
+
+    <dep>          => <dep>:#{ CFG }
+
+    all            =>   all:#{ CFG }
+    clear          => clear:#{ CFG }
+
+    debug          =>   all:#{ CFG_D  }
+    release        =>   all:#{ CFG_R  }
+    relwithdebinfo =>   all:#{ CFG_RD }
+    minsizerel     =>   all:#{ CFG_M  }
+
+    #{ DEBUG }          => #{ CFG_D  }
+    #{ RELEASE }        => #{ CFG_R  }
+    #{ RELWITHDEBINFO } => #{ CFG_RD }
+    #{ MINSIZEREL }     => #{ CFG_M  }
 
 Deps:
+
     #{ $deps.sort.join "\n    " }
 EOF
 end
@@ -360,7 +420,7 @@ def custom_dep (sym, deps = [], &blk)
     clear      = (name + '-clear').intern
     clear_only = (name + '-clear-only').intern
 
-    CONFIGS.each do | cfg |
+    CFGS.each_value do | cfg |
 
         task cfg_sym(:all, cfg) => cfg_sym(name, cfg)
 
@@ -376,12 +436,18 @@ def custom_dep (sym, deps = [], &blk)
         task cfg_sym(clear_only, cfg) do
             rm_rf dep_build_dir(name, cfg)
         end
+
+        # Aliases
+        task cfg_sym(name      , cfg_name(cfg)) => cfg_sym(name      , cfg)
+        task cfg_sym(only      , cfg_name(cfg)) => cfg_sym(only      , cfg)
+        task cfg_sym(clear     , cfg_name(cfg)) => cfg_sym(clear     , cfg)
+        task cfg_sym(clear_only, cfg_name(cfg)) => cfg_sym(clear_only, cfg)
     end
 
-    task sym        => [ cfg_sym(name      , CONFIG) ]
-    task only       => [ cfg_sym(only      , CONFIG) ]
-    task clear      => [ cfg_sym(clear     , CONFIG) ]
-    task clear_only => [ cfg_sym(clear_only, CONFIG) ]
+    task sym        => [ cfg_sym(name      , CFG) ]
+    task only       => [ cfg_sym(only      , CFG) ]
+    task clear      => [ cfg_sym(clear     , CFG) ]
+    task clear_only => [ cfg_sym(clear_only, CFG) ]
 
     $deps << name
 end
@@ -416,10 +482,10 @@ end
 
 def cmake_build_type (cfg)
     return {
-        "debug"          => "Debug",
-        "release"        => "Release",
-        "relwithdebinfo" => "RelWithDebInfo",
-        "minsizerel"     => "MinSizeRel",
+        CFG_D  => "Debug",
+        CFG_R  => "Release",
+        CFG_RD => "RelWithDebInfo",
+        CFG_M  => "MinSizeRel",
     } [cfg]
 end
 
@@ -552,10 +618,10 @@ custom_dep :boost do | name, cfg |
 
     def boost_build_variant (cfg)
         return {
-            "debug"          => "debug",
-            "release"        => "release",
-            "relwithdebinfo" => "release",
-            "minsizerel"     => "release",
+            CFG_D  => 'debug',
+            CFG_R  => 'release',
+            CFG_RD => 'release',
+            CFG_M  => 'release',
         } [cfg]
     end
 
@@ -718,10 +784,10 @@ custom_dep :qt, [ :openssl ] do | name, cfg |
 
     def qt_config (cfg)
         return {
-            "debug"          => "debug",
-            "release"        => "release",
-            "relwithdebinfo" => "release",
-            "minsizerel"     => "release",
+            CFG_D  => 'debug',
+            CFG_R  => 'release',
+            CFG_RD => 'release',
+            CFG_M  => 'release',
         } [cfg]
     end
 
