@@ -796,7 +796,7 @@ custom_dep :qt, [ :openssl ] do | name, cfg |
     end
 
     # FIXME: Ugly hack to avoid building qt every time.
-    if File.exists? "#{ dirs[:build] }/.qmake.cache" then
+    if File.exists? File.join(dirs[:build], '.qmake.cache') then
         next
     end
 
@@ -804,13 +804,13 @@ custom_dep :qt, [ :openssl ] do | name, cfg |
         cd dirs[:build] do
             # FIXME: Do 32/64 bit dispatch.
             # FIXME: Properly install products in stage.
-            sh "#{ dirs[:source] }/build-qt-windows-msvc10.cmd", 'amd64', (qt_config cfg), dirs[:stage]
-            cp_r "#{ dirs[:build] }/bin/qmake.exe", "#{ dirs[:stage] }/bin/qmake.exe"
+            sh File.join(dirs[:source], 'build-qt-windows-msvc10.cmd'), 'amd64', (qt_config cfg), dirs[:stage], $make_cmd
+            cp_r File.join(dirs[:build], 'bin', 'qmake.exe'), File.join(dirs[:stage], 'bin', 'qmake.exe')
         end
     elsif UNIX then
         cd dirs[:build] do
             # FIXME: Do 32/64 bit dispatch.
-            sh "#{ dirs[:source] }/build-qt-unix-make.sh", 'amd64', (qt_config cfg), dirs[:stage]
+            sh File.join(dirs[:source], 'build-qt-unix-make.sh'), 'amd64', (qt_config cfg), dirs[:stage], $make_flags
         end
     end
 end
@@ -826,8 +826,8 @@ custom_dep :ruby do | name, cfg |
 
     if WINDOWS then
         cd dirs[:build] do
-            sh "#{ dirs[:source] }/win32/configure.bat"
-            edit_file("#{ dirs[:build] }/Makefile", /^RT = msvcr\d+/, 'RT = msvcrt')
+            sh File.join(dirs[:source], 'win32', 'configure.bat')
+            edit_file(File.join(dirs[:build], 'Makefile'), /^RT = msvcr\d+/, 'RT = msvcrt')
             sh 'nmake'
             sh 'nmake', "DESTDIR=#{ dirs[:stage] }", 'install', 'install-lib'
         end
@@ -836,7 +836,7 @@ custom_dep :ruby do | name, cfg |
              sh 'autoconf'
         end
         cd dirs[:build] do
-             sh "#{ dirs[:source] }/configure", "--prefix=#{ dirs[:stage] }"
+             sh File.join(dirs[:source], 'configure'), "--prefix=#{ dirs[:stage] }"
              sh 'make'
              sh 'make', 'install', 'install-lib'
         end
@@ -849,12 +849,12 @@ custom_dep :qt3d, [ :qt ] do | name, cfg |
 
     if WINDOWS then
         # FIXME: Have qt properly stage itself on windows.
-        qmake_path  = "#{ dep_build_dir('qt', cfg) }/bin/qmake.exe"
+        qmake_path  = File.join dep_build_dir('qt', cfg), 'bin', 'qmake.exe'
     else
-        qmake_path  = "#{ dirs[:stage] }/bin/qmake"
+        qmake_path  = File.join dirs[:stage], 'bin', 'qmake'
     end
 
-    project_path = "#{ dirs[:source] }/qt3d.pro"
+    project_path = Fie.join dirs[:source], 'qt3d.pro'
 
     cd dirs[:build] do
         # FIXME: Honor build configuration.
