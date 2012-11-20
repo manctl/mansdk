@@ -1,8 +1,8 @@
-NAME  = 'ManSDK'
-MAJOR = 0
-MINOR = 1
-VERSION = "#{MAJOR}.#{MINOR}"
-TITLE   = "#{NAME} #{VERSION}"
+SDK_NAME    = 'ManSDK'
+SDK_MAJOR   = 0
+SDK_MINOR   = 1
+SDK_VERSION = "#{ SDK_MAJOR }.#{ SDK_MINOR   }"
+SDK_TITLE   = "#{ SDK_NAME  } #{ SDK_VERSION }"
 
 #-------------------------------------------------------------------------------
 # Library
@@ -330,8 +330,8 @@ task :help do
 
     puts <<EOF
 
-#{ centered(80,       TITLE) }
-#{ centered(80, '-' * TITLE.length) }
+#{ centered(80,       SDK_TITLE) }
+#{ centered(80, '-' * SDK_TITLE.length) }
 
 Platform:
 
