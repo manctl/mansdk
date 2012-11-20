@@ -533,7 +533,7 @@ def cmake_build (name, cfg, extra_defs = {}, extra_args = [])
 end
 
 def cmake_dep (sym, deps = [], extra_defs = {}, extra_args = [])
-	custom_dep sym, deps do | name, cfg | cmake_build name, cfg, extra_defs, extra_args end
+    custom_dep sym, deps do | name, cfg | cmake_build name, cfg, extra_defs, extra_args end
 end
 
 #===============================================================================
@@ -694,7 +694,7 @@ cmake_dep :vtk, [], {
 }
 
 cmake_dep :pcl, [ :boost, :eigen, :flann, :qhull, :qt, :vtk ] + (WINDOWS ? [ :png ] : [ :openni ]), {
-	'BUILD_apps'                  => [ BOOL, OFF ],
+    'BUILD_apps'                  => [ BOOL, OFF ],
     'BUILD_simulation'            => [ BOOL, OFF ],
     'BUILD_outofcore'             => [ BOOL, OFF ],
     'BUILD_gpu_kinfu'             => [ BOOL, ON  ],
@@ -717,7 +717,7 @@ cmake_dep :pcl, [ :boost, :eigen, :flann, :qhull, :qt, :vtk ] + (WINDOWS ? [ :pn
     'BUILD_recognition'           => [ BOOL, OFF ],
     'BUILD_segmentation'          => [ BOOL, ON  ], # registration
     'BUILD_stereo'                => [ BOOL, OFF ],
-    'BUILD_tracking'              => [ BOOL, OFF ],	
+    'BUILD_tracking'              => [ BOOL, OFF ],
     'BUILD_visualization'         => [ BOOL, ON  ], # kinfu
     'BUILD_TESTS'                 => [ BOOL, OFF ],
     'BUILD_OPENNI'                => [ BOOL, OFF ],
