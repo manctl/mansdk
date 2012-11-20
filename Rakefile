@@ -85,6 +85,9 @@ CONFIGS = {
 
 STATIC_LIBRARIES = false
 
+PARALLEL_BUILDS  = true
+PARALLEL_TASKS   = true
+
 MACOSX_RPATH     = "@loader_path/../lib"
 LINUX_RPATH      = "\$ORIGIN/../lib"
 
@@ -196,12 +199,12 @@ begin
         when /linux|darwin/  then
             $cmake_gen  = 'Unix Makefiles'
             $make_cmd   = 'make'
-            $make_flags = [] + MAKE_FLAGS
+            $make_flags = PARALLEL_BUILDS ? [ '-j' ] : [] + MAKE_FLAGS
         when /win32|mingw32/ then
-            $cmake_gen  = 'NMake Makefiles JOM'
-            $jom_dir =  File.join HERE, 'core', 'deps', 'jom'
+            $cmake_gen  = PARALLEL_BUILDS ? 'NMake Makefiles JOM' : 'NMake Makefiles'
+            $jom_dir    =  File.join HERE, 'core', 'deps', 'jom'
             add_env_path $jom_dir
-            $make_cmd = 'jom'
+            $make_cmd   = PARALLEL_BUILDS ? 'jom' : 'nmake'
             $make_flags = [] + MAKE_FLAGS
         else
             raise UNKOWN_PLATFORM
@@ -394,11 +397,13 @@ def custom_dep (sym, deps = [], &blk)
 
     CFGS.each_value do | cfg |
 
+        def dep_task (hsh, &blk) return PARALLEL_TASKS ? multitask(hsh, &blk) : task(hsh, &blk) end
+
         task cfg_sym(:all, cfg) => cfg_sym(name, cfg)
 
-        task cfg_sym(name, cfg) => dep_deps(deps, cfg) do | task, args | blk.call(name, cfg) end
+        dep_task cfg_sym(name, cfg) => dep_deps(deps, cfg) do | task, args | blk.call(name, cfg) end
 
-        task cfg_sym(only, cfg) => dep_deps([]  , cfg) do | task, args | blk.call(name, cfg) end
+        dep_task cfg_sym(only, cfg) => dep_deps([]  , cfg) do | task, args | blk.call(name, cfg) end
 
         task cfg_sym(:clear, cfg) => cfg_sym(clear, cfg)
 
