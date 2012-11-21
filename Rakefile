@@ -763,7 +763,7 @@ custom_dep :openssl do | name, cfg |
     if WINDOWS then
         cd dirs[:build] do
             if ARCH_32 then
-                sh 'perl', "./Configure", 'VC-WINDOWS', 'no-asm', "--prefix=#{ dirs[:stage] }"
+                sh 'perl', "./Configure", 'VC-WIN32', 'no-asm', "--prefix=#{ dirs[:stage] }"
                 sh "ms/do_ms"
             elsif ARCH_64 then
                 sh 'perl', "./Configure", 'VC-WIN64A', 'no-asm', "--prefix=#{ dirs[:stage] }"
