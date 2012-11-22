@@ -9,7 +9,7 @@ SDK_TITLE   = "#{ SDK_NAME  } #{ SDK_VERSION }"
 
 HERE = File.dirname File.expand_path __FILE__
 
-UNKNOWN_PLATFORM = "Unknown Platform"
+UNKNOWN_SYSTEM = "Unknown System"
 
 def write_file (path, contents)
     file = File.new(path, "w")
@@ -38,14 +38,14 @@ def native_path (path)
     case RUBY_PLATFORM
         when /linux|darwin/  then return path
         when /win32|mingw32/ then return path.gsub('/', '\\')
-        else raise UNKNOWN_PLATFORM
+        else raise UNKNOWN_SYSTEM
     end
 end
 
 case RUBY_PLATFORM
     when /linux|darwin/  then EXE_SUFFIX = ''
     when /win32|mingw32/ then EXE_SUFFIX = '.exe'
-    else raise UNKNOWN_PLATFORM
+    else raise UNKNOWN_SYSTEM
 end
 
 def exe (path)
@@ -133,8 +133,13 @@ PLATFORM_CPP = <<EOF
 #include <iostream>
 #include <string>
 
+namespace {
+
+//------------------------------------------------------------------------------
+// SYS
+
 // See: http://poshlib.hookatooka.com/poshlib/trac.cgi.
-static const char sys [] =
+const char sys [] =
 #if   defined(_WINDOWS) || defined(_WIN64) || defined(__WINDOWS__)
     "windows"
 #elif defined(__linux__) || defined(__linux) || defined(linux)
@@ -146,8 +151,12 @@ static const char sys [] =
 #endif
 ;
 
+
+//------------------------------------------------------------------------------
+// CPU
+
 // See http://predef.sourceforge.net/prearch.html.
-static const char cpu [] =
+const char cpu [] =
 #if   defined(_M_IX86) || defined(__i386__) || defined(__X86__) || defined(__I86__)
     "x86"
 #elif defined(__amd64__) || defined(__amd64) || defined(__x86_64__) || defined(__x86_64) || defined(_M_X64)
@@ -159,35 +168,58 @@ static const char cpu [] =
 #endif
 ;
 
-void
-usage (int argc, char* argv[])
+//------------------------------------------------------------------------------
+// CORES
+
+// See: http://stackoverflow.com/questions/150355/programmatically-find-the-number-of-cores-on-a-machine
+#if _WIN32
+#   define WIN32_LEAN_AND_MEAN
+#   define WIN32_EXTRA_LEAN
+#   include <windows.h>
+int
+cores ()
 {
-    std::cout << argv[0] << "(sys|cpu)" << std::endl;
+    SYSTEM_INFO info;
+    GetSystemInfo(&info);
+    return info.dwNumberOfProcessors;
+}
+#else
+int
+cores ()
+{
+    return sysconf( _SC_NPROCESSORS_ONLN );
+}
+#endif
+
+//------------------------------------------------------------------------------
+
+void
+usage (int argc, char* argv[], int ret)
+{
+    std::cout << argv[0] << "(sys|cpu|cores)" << std::endl;
+}
+
 }
 
 int
 main (int argc, char* argv[])
 {
-    if ()
-
     if (argc < 1)
-    {
-        usage(argc, argv);
-        return 1;
-    }
+        usage(argc, argv, 1);
 
     const std::string arg = argv[1];
 
-    if      (arg == "cpu")
-        std::cout << cpu << std::endl;
-    else if (arg == "sys")
-        std::cout << sys << std::endl;
+    if      (arg == "cpu"  ) std::cout << cpu     << std::endl;
+    else if (arg == "sys"  ) std::cout << sys     << std::endl;
+    else if (arg == "cores") std::cout << cores() << std::endl;
+    else
+        usage(argc, argv, 2);
 }
 EOF
 
-OS_WINDOWS = 'windows'
-OS_LINUX   = 'linux'
-OS_MACOSX  = 'macosx'
+SYS_WINDOWS = 'windows'
+SYS_LINUX   = 'linux'
+SYS_MACOSX  = 'macosx'
 
 CPU_X86   = 'x86'
 CPU_AMD64 = 'amd64'
@@ -203,22 +235,16 @@ EOF
 #===============================================================================
 # Bootstrap
 
-NUM_CPUS = 2 # FIXME: Detect that.
-
 begin
     case RUBY_PLATFORM
         when /linux|darwin/  then
-            $cmake_gen  = 'Unix Makefiles'
-            $make_cmd   = 'make'
-            $make_flags = PARALLEL_BUILDS ? [ '-j' + NUM_CPUS.to_s ] : [] + MAKE_FLAGS
+            cmake_gen  = 'Unix Makefiles'
+            make_cmd   = 'make'
         when /win32|mingw32/ then
-            $cmake_gen  = PARALLEL_BUILDS ? 'NMake Makefiles JOM' : 'NMake Makefiles'
-            $jom_dir    =  File.join HERE, 'core', 'deps', 'jom'
-            add_env_path $jom_dir
-            $make_cmd   = PARALLEL_BUILDS ? 'jom' : 'nmake'
-            $make_flags = [] + MAKE_FLAGS
+            cmake_gen  = 'NMake Makefiles'
+            make_cmd   = 'nmake'
         else
-            raise UNKOWN_PLATFORM
+            raise UNKOWN_SYSTEM
     end
 
     stage_bin = File.join stage_subdir 'platform/bin/'
@@ -234,28 +260,51 @@ begin
 
         cd build_dir do
             sh 'cmake',
-                "-G#{$cmake_gen}",
+                "-G#{cmake_gen}",
                 "-DCMAKE_BUILD_TYPE:STRING=Release",
                 "-DCMAKE_INSTALL_PREFIX:PATH=#{ stage_dir }",
                 source_dir
-            sh $make_cmd
-            sh $make_cmd, 'install'
+            sh make_cmd
+            sh make_cmd, 'install'
         end
     end
 
     PLATFORM_BIN = File.join stage_bin, 'platform'
+    def platform_val (arg) return `#{ PLATFORM_BIN } #{ arg }`.strip end
 
-    SYS = `#{ PLATFORM_BIN } sys`.strip
-    CPU = `#{ PLATFORM_BIN } cpu`.strip
+    SYS   = platform_val 'sys'
+    CPU   = platform_val 'cpu'
+    CORES = platform_val 'cores'
+end
+
+#-------------------------------------------------------------------------------
+
+# Post-Boostrap
+
+begin
+    case SYS
+        when /#{SYS_MACOSX}|#{SYS_LINUX}/ then
+            $cmake_gen  = 'Unix Makefiles'
+            $make_cmd   = 'make'
+            $make_flags = PARALLEL_BUILDS ? [ '-j' + CORES.to_s ] : [] + MAKE_FLAGS
+        when SYS_WINDOWS then
+            $cmake_gen  = PARALLEL_BUILDS ? 'NMake Makefiles JOM' : 'NMake Makefiles'
+            $jom_dir    =  File.join HERE, 'core', 'deps', 'jom'
+            add_env_path $jom_dir
+            $make_cmd   = PARALLEL_BUILDS ? 'jom' : 'nmake'
+            $make_flags = [] + MAKE_FLAGS
+        else
+            raise UNKOWN_SYSTEM
+    end
 end
 
 #-------------------------------------------------------------------------------
 
 # Platform-specific Keywords
 
-WINDOWS = SYS == OS_WINDOWS
-MACOSX  = SYS == OS_MACOSX
-LINUX   = SYS == OS_LINUX
+WINDOWS = SYS == SYS_WINDOWS
+MACOSX  = SYS == SYS_MACOSX
+LINUX   = SYS == SYS_LINUX
 UNIX    = LINUX || MACOSX
 AMD64   = CPU == CPU_AMD64
 X86     = CPU == CPU_X86
