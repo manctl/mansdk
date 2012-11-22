@@ -5,11 +5,24 @@ SDK_VERSION = "#{ SDK_MAJOR }.#{ SDK_MINOR   }"
 SDK_TITLE   = "#{ SDK_NAME  } #{ SDK_VERSION }"
 
 #-------------------------------------------------------------------------------
+
+require 'digest/sha1'
+
+#-------------------------------------------------------------------------------
 # Library
 
 HERE = File.dirname File.expand_path __FILE__
 
 UNKNOWN_SYSTEM = "Unknown System"
+
+def read_file (path)
+    return '' unless File.exists? path
+    return File.read path
+end
+
+def read_file_in (dir, name)
+    return read_file File.join(dir, name)
+end
 
 def write_file (path, contents)
     file = File.new(path, "w")
@@ -17,8 +30,8 @@ def write_file (path, contents)
     file.close
 end
 
-def write_file_in (dir, path, contents)
-    write_file File.join(dir, path), contents
+def write_file_in (dir, name, contents)
+    write_file File.join(dir, name), contents
 end
 
 def edit_file (path, pattern, replacement)
@@ -26,10 +39,9 @@ def edit_file (path, pattern, replacement)
     File.open(path, "w") { | file | file << text }
 end
 
-def files_exist_in (dir, *files)
-    ret = true
-    files.each { | file | ret &&= File.exists? File.join(dir, file) }
-    return ret
+def files_exist_in (dir, *names)
+    names.each { | name | if not File.exists? File.join(dir, name) then return false end }
+    return true
 end
 
 def add_env_path (path) ENV['PATH'] += File::PATH_SEPARATOR + native_path(path) end
@@ -184,6 +196,7 @@ cores ()
     return info.dwNumberOfProcessors;
 }
 #else
+#include <unistd.h>
 int
 cores ()
 {
@@ -217,6 +230,8 @@ main (int argc, char* argv[])
 }
 EOF
 
+PLATFORM_CPP_HASH = Digest::SHA1.hexdigest PLATFORM_CPP
+
 SYS_WINDOWS = 'windows'
 SYS_LINUX   = 'linux'
 SYS_MACOSX  = 'macosx'
@@ -247,14 +262,19 @@ begin
             raise UNKOWN_SYSTEM
     end
 
-    stage_bin = File.join stage_subdir 'platform/bin/'
+    source_dir = make_build_subdir 'platform'
+    build_dir  = make_build_subdir 'platform/build'
+    stage_dir  = make_stage_subdir 'platform'
+    bin_dir    = make_stage_subdir 'platform/bin/'
+    share_dir  = make_stage_subdir 'platform/share/'
 
-    unless files_exist_in stage_bin, exe('platform')
+    PLATFORM_CPP_HASH_FILE = 'platform.cpp.hash'
 
-        source_dir = make_build_subdir 'platform'
-        build_dir  = make_build_subdir 'platform/build'
-        stage_dir  = make_stage_subdir 'platform'
+    cpp_hash = read_file_in(share_dir, PLATFORM_CPP_HASH_FILE)
 
+    unless cpp_hash == PLATFORM_CPP_HASH
+
+        write_file_in share_dir , PLATFORM_CPP_HASH_FILE, PLATFORM_CPP_HASH
         write_file_in source_dir, 'platform.cpp', PLATFORM_CPP
         write_file_in source_dir, 'CMakeLists.txt',   PLATFORM_CMAKELISTS_TXT
 
@@ -269,7 +289,7 @@ begin
         end
     end
 
-    PLATFORM_BIN = File.join stage_bin, 'platform'
+    PLATFORM_BIN = File.join bin_dir, 'platform'
     def platform_val (arg) return `#{ PLATFORM_BIN } #{ arg }`.strip end
 
     SYS   = platform_val 'sys'
