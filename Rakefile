@@ -129,8 +129,9 @@ def  make_stage_subdir (path) dir =  stage_subdir(path); mkdir_p dir; return dir
 #-------------------------------------------------------------------------------
 # Platform
 
-PLATFORM_SYS_CPP = <<EOF
+PLATFORM_CPP = <<EOF
 #include <iostream>
+#include <string>
 
 // See: http://poshlib.hookatooka.com/poshlib/trac.cgi.
 static const char sys [] =
@@ -145,20 +146,6 @@ static const char sys [] =
 #endif
 ;
 
-int
-main (int argc, char* argv[])
-{
-    std::cout << sys << std::endl;
-}
-EOF
-
-OS_WINDOWS = 'windows'
-OS_LINUX   = 'linux'
-OS_MACOSX  = 'macosx'
-
-PLATFORM_CPU_CPP = <<EOF
-#include <iostream>
-
 // See http://predef.sourceforge.net/prearch.html.
 static const char cpu [] =
 #if   defined(_M_IX86) || defined(__i386__) || defined(__X86__) || defined(__I86__)
@@ -172,12 +159,35 @@ static const char cpu [] =
 #endif
 ;
 
+void
+usage (int argc, char* argv[])
+{
+    std::cout << argv[0] << "(sys|cpu)" << std::endl;
+}
+
 int
 main (int argc, char* argv[])
 {
-    std::cout << cpu;
+    if ()
+
+    if (argc < 1)
+    {
+        usage(argc, argv);
+        return 1;
+    }
+
+    const std::string arg = argv[1];
+
+    if      (arg == "cpu")
+        std::cout << cpu << std::endl;
+    else if (arg == "sys")
+        std::cout << sys << std::endl;
 }
 EOF
+
+OS_WINDOWS = 'windows'
+OS_LINUX   = 'linux'
+OS_MACOSX  = 'macosx'
 
 CPU_X86   = 'x86'
 CPU_AMD64 = 'amd64'
@@ -186,9 +196,8 @@ CPU_PPC   = 'ppc'
 PLATFORM_CMAKELISTS_TXT = <<EOF
 cmake_minimum_required(VERSION 2.8)
 project(platform)
-add_executable( platform-sys platform-sys.cpp)
-add_executable( platform-cpu platform-cpu.cpp)
-install(TARGETS platform-sys platform-cpu DESTINATION bin)
+add_executable( platform platform.cpp)
+install(TARGETS platform DESTINATION bin)
 EOF
 
 #===============================================================================
@@ -214,14 +223,13 @@ begin
 
     stage_bin = File.join stage_subdir 'platform/bin/'
 
-    unless files_exist_in stage_bin, exe('platform-sys'), exe('platform-cpu')
+    unless files_exist_in stage_bin, exe('platform')
 
         source_dir = make_build_subdir 'platform'
         build_dir  = make_build_subdir 'platform/build'
         stage_dir  = make_stage_subdir 'platform'
 
-        write_file_in source_dir, 'platform-sys.cpp', PLATFORM_SYS_CPP
-        write_file_in source_dir, 'platform-cpu.cpp', PLATFORM_CPU_CPP
+        write_file_in source_dir, 'platform.cpp', PLATFORM_CPP
         write_file_in source_dir, 'CMakeLists.txt',   PLATFORM_CMAKELISTS_TXT
 
         cd build_dir do
@@ -235,11 +243,10 @@ begin
         end
     end
 
-    PLATFORM_SYS_BIN = File.join stage_bin, 'platform-sys'
-    PLATFORM_CPU_BIN = File.join stage_bin, 'platform-cpu'
+    PLATFORM_BIN = File.join stage_bin, 'platform'
 
-    SYS = `#{ PLATFORM_SYS_BIN   }`.strip
-    CPU = `#{ PLATFORM_CPU_BIN }`.strip
+    SYS = `#{ PLATFORM_BIN } sys`.strip
+    CPU = `#{ PLATFORM_BIN } cpu`.strip
 end
 
 #-------------------------------------------------------------------------------
