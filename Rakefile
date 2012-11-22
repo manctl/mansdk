@@ -632,28 +632,29 @@ custom_dep :boost do | name, cfg |
         b2 = 'b2.exe'
     end
 
-    def boost_build_variant (cfg)
-        return {
-            CFG_D  => 'debug',
-            CFG_R  => 'release',
-            CFG_RD => 'release',
-            CFG_M  => 'release',
-        } [cfg]
-    end
+    boost_build_variants = {
+        CFG_D  => 'debug',
+        CFG_R  => 'release',
+        CFG_RD => 'release',
+        CFG_M  => 'release',
+    }
+
+    boost_address_models = {
+        CPU_X86   => 'address-model=32',
+        CPU_AMD64 => 'address-model=64',
+    }
 
     cd dirs[:source] do
         sh bootstrap
         ENV['NO_COMPRESSION'] = '1'
-
         # FIXME: b2 --dll-path=#{ rpath() } does not seem to work.
-
         b2_args = [
             "--prefix=#{    native_path dirs[:stage] }",
             "--build-dir=#{ native_path dirs[:build] }",
             '--without-python',
-            'address-model=64', # FIXME: Address model should not be hard-coded.
+            boost_address_models[CPU],
             'threading=multi',
-            "variant=#{ boost_build_variant(cfg) }",
+            "variant=#{ boost_build_variants[cfg] }",
         ]
         b2_args << 'link=static' if STATIC_LIBRARIES
         b2_args << 'cxxflags=-fPIC' if LINUX and CPU_64
