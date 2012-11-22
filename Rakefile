@@ -401,9 +401,9 @@ def custom_dep (sym, deps = [], &blk)
 
         task cfg_sym(:all, cfg) => cfg_sym(name, cfg)
 
-        dep_task cfg_sym(name, cfg) => dep_deps(deps, cfg) do | task, args | blk.call(name, cfg) end
+        task cfg_sym(name, cfg) => dep_deps(deps, cfg) do | task, args | blk.call(name, cfg) end
 
-        dep_task cfg_sym(only, cfg) => dep_deps([]  , cfg) do | task, args | blk.call(name, cfg) end
+        task cfg_sym(only, cfg) => dep_deps([]  , cfg) do | task, args | blk.call(name, cfg) end
 
         task cfg_sym(:clear, cfg) => cfg_sym(clear, cfg)
 
