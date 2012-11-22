@@ -291,9 +291,11 @@ def  make_cfg_stage_dir (cfg) ret =  cfg_stage_dir cfg; mkdir_p ret; return ret 
 
 $deps = []
 
-task :default => :all
+def parallel_task (hsh, &blk) return PARALLEL_TASKS ? multitask(hsh, &blk) : task(hsh, &blk) end
 
-task :all => cfg_sym(:all, CFG)
+multitask :default => :all
+
+multitask :all => cfg_sym(:all, CFG)
 
 task :pack => cfg_sym(:pack, CFG)
 
@@ -397,15 +399,15 @@ def custom_dep (sym, deps = [], &blk)
 
     CFGS.each_value do | cfg |
 
-        def dep_task (hsh, &blk) return PARALLEL_TASKS ? multitask(hsh, &blk) : task(hsh, &blk) end
-
+        # Hooks
         task cfg_sym(:all, cfg) => cfg_sym(name, cfg)
-
-        task cfg_sym(name, cfg) => dep_deps(deps, cfg) do | task, args | blk.call(name, cfg) end
-
-        task cfg_sym(only, cfg) => dep_deps([]  , cfg) do | task, args | blk.call(name, cfg) end
-
         task cfg_sym(:clear, cfg) => cfg_sym(clear, cfg)
+
+        multitask cfg_sym(name, cfg, '-deps') => dep_deps(deps, cfg)
+
+        task cfg_sym(only, cfg) do | task, args | blk.call(name, cfg) end
+
+        task cfg_sym(name, cfg) => [ cfg_sym(name, cfg, '-deps'), cfg_sym(only, cfg) ]
 
         task cfg_sym(clear, cfg) => dep_deps(deps, cfg, '-clear')
         task cfg_sym(clear, cfg) => cfg_sym(clear_only, cfg)
