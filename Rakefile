@@ -129,11 +129,11 @@ def  make_stage_subdir (path) dir =  stage_subdir(path); mkdir_p dir; return dir
 #-------------------------------------------------------------------------------
 # Platform
 
-PLATFORM_OS_CPP = <<EOF
+PLATFORM_SYS_CPP = <<EOF
 #include <iostream>
 
 // See: http://poshlib.hookatooka.com/poshlib/trac.cgi.
-static const char os [] =
+static const char sys [] =
 #if   defined(_WINDOWS) || defined(_WIN64) || defined(__WINDOWS__)
     "windows"
 #elif defined(__linux__) || defined(__linux) || defined(linux)
@@ -148,19 +148,19 @@ static const char os [] =
 int
 main (int argc, char* argv[])
 {
-    std::cout << os << std::endl;
+    std::cout << sys << std::endl;
 }
 EOF
 
-OS_WINDOWS='windows'
-OS_LINUX='linux'
-OS_MACOSX='macosx'
+OS_WINDOWS = 'windows'
+OS_LINUX   = 'linux'
+OS_MACOSX  = 'macosx'
 
-PLATFORM_ARCH_CPP = <<EOF
+PLATFORM_CPU_CPP = <<EOF
 #include <iostream>
 
 // See http://predef.sourceforge.net/prearch.html.
-static const char arch [] =
+static const char cpu [] =
 #if   defined(_M_IX86) || defined(__i386__) || defined(__X86__) || defined(__I86__)
     "x86"
 #elif defined(__amd64__) || defined(__amd64) || defined(__x86_64__) || defined(__x86_64) || defined(_M_X64)
@@ -175,20 +175,20 @@ static const char arch [] =
 int
 main (int argc, char* argv[])
 {
-    std::cout << arch;
+    std::cout << cpu;
 }
 EOF
 
-ARCH_X86='x86'
-ARCH_AMD64='amd64'
-ARCH_PPC='ppc'
+CPU_X86   = 'x86'
+CPU_AMD64 = 'amd64'
+CPU_PPC   = 'ppc'
 
 PLATFORM_CMAKELISTS_TXT = <<EOF
 cmake_minimum_required(VERSION 2.8)
 project(platform)
-add_executable(platform-os   platform-os.cpp)
-add_executable(platform-arch platform-arch.cpp)
-install(TARGETS platform-os platform-arch DESTINATION bin)
+add_executable( platform-sys platform-sys.cpp)
+add_executable( platform-cpu platform-cpu.cpp)
+install(TARGETS platform-sys platform-cpu DESTINATION bin)
 EOF
 
 #===============================================================================
@@ -212,15 +212,15 @@ begin
 
     stage_bin = File.join stage_subdir 'platform/bin/'
 
-    unless files_exist_in stage_bin, exe('platform-os'), exe('platform-arch')
+    unless files_exist_in stage_bin, exe('platform-sys'), exe('platform-cpu')
 
         source_dir = make_build_subdir 'platform'
         build_dir  = make_build_subdir 'platform/build'
         stage_dir  = make_stage_subdir 'platform'
 
-        write_file_in source_dir, 'platform-os.cpp',   PLATFORM_OS_CPP
-        write_file_in source_dir, 'platform-arch.cpp', PLATFORM_ARCH_CPP
-        write_file_in source_dir, 'CMakeLists.txt',    PLATFORM_CMAKELISTS_TXT
+        write_file_in source_dir, 'platform-sys.cpp', PLATFORM_SYS_CPP
+        write_file_in source_dir, 'platform-cpu.cpp', PLATFORM_CPU_CPP
+        write_file_in source_dir, 'CMakeLists.txt',   PLATFORM_CMAKELISTS_TXT
 
         cd build_dir do
             sh 'cmake',
@@ -233,25 +233,25 @@ begin
         end
     end
 
-    PLATFORM_OS_BIN   = File.join stage_bin, 'platform-os'
-    PLATFORM_ARCH_BIN = File.join stage_bin, 'platform-arch'
+    PLATFORM_SYS_BIN = File.join stage_bin, 'platform-sys'
+    PLATFORM_CPU_BIN = File.join stage_bin, 'platform-cpu'
 
-    PLATFORM_OS   = `#{ PLATFORM_OS_BIN   }`.strip
-    PLATFORM_ARCH = `#{ PLATFORM_ARCH_BIN }`.strip
+    SYS = `#{ PLATFORM_SYS_BIN   }`.strip
+    CPU = `#{ PLATFORM_CPU_BIN }`.strip
 end
 
 #-------------------------------------------------------------------------------
 
 # Platform-specific Keywords
 
-WINDOWS = PLATFORM_OS == OS_WINDOWS
-MACOSX  = PLATFORM_OS == OS_MACOSX
-LINUX   = PLATFORM_OS == OS_LINUX
+WINDOWS = SYS == OS_WINDOWS
+MACOSX  = SYS == OS_MACOSX
+LINUX   = SYS == OS_LINUX
 UNIX    = LINUX || MACOSX
-AMD64   = PLATFORM_ARCH == ARCH_AMD64
-X86     = PLATFORM_ARCH == ARCH_X86
-ARCH_64 = AMD64
-ARCH_32 = X86
+AMD64   = CPU == CPU_AMD64
+X86     = CPU == CPU_X86
+CPU_64  = AMD64
+CPU_32  = X86
 
 # Cross-platform Helpers
 
@@ -338,7 +338,7 @@ task :help do
 
 Platform:
 
-    #{ PLATFORM_OS }-#{ PLATFORM_ARCH }
+    #{ SYS }-#{ CPU }
 
 Variables:
 
@@ -547,8 +547,8 @@ end
 cmake_dep :zlib, [], {
     'BUILD_SHARED_LIBS' => [ BOOL, (not STATIC_LIBRARIES) ],
  }.tap { | flags |
-    flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX and ARCH_64
-    flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX and ARCH_64
+    flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX and CPU_64
+    flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX and CPU_64
 } if not LINUX
 
 cmake_dep :portaudio, [], {
@@ -605,8 +605,8 @@ cmake_dep :flann, [], {
 }
 
 cmake_dep :qhull, [], {}.tap { | flags |
-    flags[ 'CMAKE_C_FLAGS'   ] = [ STRING, '-fPIC' ] if LINUX and ARCH_64
-    flags[ 'CMAKE_CXX_FLAGS' ] = [ STRING, '-fPIC' ] if LINUX and ARCH_64
+    flags[ 'CMAKE_C_FLAGS'   ] = [ STRING, '-fPIC' ] if LINUX and CPU_64
+    flags[ 'CMAKE_CXX_FLAGS' ] = [ STRING, '-fPIC' ] if LINUX and CPU_64
 }
 
 custom_dep :boost do | name, cfg |
@@ -645,7 +645,7 @@ custom_dep :boost do | name, cfg |
             "variant=#{ boost_build_variant(cfg) }",
         ]
         b2_args << 'link=static' if STATIC_LIBRARIES
-        b2_args << 'cxxflags=-fPIC' if LINUX and ARCH_64
+        b2_args << 'cxxflags=-fPIC' if LINUX and CPU_64
         b2_args << 'install'
         sh b2, *b2_args
     end
@@ -694,8 +694,8 @@ cmake_dep :vtk, [], {
     'CMAKE_VERBOSE_MAKEFILE' => [ BOOL, ON ],
     'BUILD_TESTING' => [ BOOL, OFF ],
 }.tap { | flags |
-    flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX and ARCH_64
-    flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX and ARCH_64
+    flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX and CPU_64
+    flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX and CPU_64
 }
 
 cmake_dep :pcl, [ :boost, :eigen, :flann, :qhull, :qt, :vtk ] + (WINDOWS ? [ :png ] : [ :openni ]), {
@@ -732,8 +732,8 @@ cmake_dep :pcl, [ :boost, :eigen, :flann, :qhull, :qt, :vtk ] + (WINDOWS ? [ :pn
     'PCL_SHARED_LIBS'             => [ BOOL, (not STATIC_LIBRARIES) ],
     'PCL_ONLY_CORE_POINT_TYPES'   => [ BOOL, ON  ],
 }.tap { | flags |
-    flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX and ARCH_64
-    flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX and ARCH_64
+    flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX and CPU_64
+    flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX and CPU_64
 }
 
 #, [ '--trace' ]
@@ -749,8 +749,8 @@ cmake_dep :opencv, [] + (WINDOWS ? [ :png ] : []), {
     'WITH_EIGEN'                     => [ BOOL  , OFF ],
     'CMAKE_LINK_INTERFACE_LIBRARIES' => [ STRING, "" ],
 }.tap { | flags |
-    flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX and ARCH_64
-    flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX and ARCH_64
+    flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX and CPU_64
+    flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX and CPU_64
 }
 
 custom_dep :openssl do | name, cfg |
@@ -761,14 +761,20 @@ custom_dep :openssl do | name, cfg |
     mirror_dirs dirs[:source], dirs[:build]
 
     if WINDOWS then
+
+        configure_cpus = {
+            CPU_X86   => 'VC-WIN32',
+            CPU_AMD64 => 'VC-WIN64A',
+        }
+
+        configure_post_cmds = {
+            CPU_X86   => "ms/do_ms",
+            CPU_AMD64 => "ms/do_win64a",
+        }
+
         cd dirs[:build] do
-            if ARCH_32 then
-                sh 'perl', "./Configure", 'VC-WIN32', 'no-asm', "--prefix=#{ dirs[:stage] }"
-                sh "ms/do_ms"
-            elsif ARCH_64 then
-                sh 'perl', "./Configure", 'VC-WIN64A', 'no-asm', "--prefix=#{ dirs[:stage] }"
-                sh "ms/do_win64a"
-            end
+            sh 'perl', "./Configure", configure_cpus[CPU], 'no-asm', "--prefix=#{ dirs[:stage] }"
+            sh configure_post_cmds[CPU]
             sh 'nmake', '-f', 'ms/ntdll.mak'
             sh 'nmake', '-f', 'ms/ntdll.mak', 'install'
         end
@@ -781,36 +787,37 @@ custom_dep :openssl do | name, cfg |
     end
 end
 
-# FIXME: Properly dispatch on actual config.
 custom_dep :qt, [ :openssl ] do | name, cfg |
 
     dirs = dep_dirs name, cfg
 
-    def qt_config (cfg)
-        return {
-            CFG_D  => 'debug',
-            CFG_R  => 'release',
-            CFG_RD => 'release',
-            CFG_M  => 'release',
-        } [cfg]
-    end
+    qt_cpus = {
+        CPU_X86   => 'x86',
+        CPU_AMD64 => 'amd64',
+    }
+
+    qt_cfgs = {
+        CFG_D  => 'debug',
+        CFG_R  => 'release',
+        CFG_RD => 'release',
+        CFG_M  => 'release',
+    }
 
     # FIXME: Ugly hack to avoid building qt every time.
     if File.exists? File.join(dirs[:build], '.qmake.cache') then
-        next
+#        next
     end
 
     if WINDOWS then
         cd dirs[:build] do
-            # FIXME: Do 32/64 bit dispatch.
-            # FIXME: Properly install products in stage.
-            sh File.join(dirs[:source], 'build-qt-windows-msvc10.cmd'), 'amd64', (qt_config cfg), dirs[:stage], $make_cmd
+            sh File.join(dirs[:source], 'build-qt-windows-msvc10.cmd'), qt_cpus[CPU], qt_cfgs[cfg], dirs[:stage], $make_cmd
+
+            # FIXME: Properly install ALL products in stage.
             cp_r File.join(dirs[:build], 'bin', 'qmake.exe'), File.join(dirs[:stage], 'bin', 'qmake.exe')
         end
     elsif UNIX then
         cd dirs[:build] do
-            # FIXME: Do 32/64 bit dispatch.
-            sh File.join(dirs[:source], 'build-qt-unix-make.sh'), 'amd64', (qt_config cfg), dirs[:stage], $make_flags
+            sh File.join(dirs[:source], 'build-qt-unix-make.sh'), qt_cpus[CPU], qt_cfgs[cfg], dirs[:stage], $make_flags
         end
     end
 end
@@ -841,7 +848,7 @@ custom_dep :ruby do | name, cfg |
              sh 'make', 'install', 'install-lib'
         end
     end
-end if ARCH_32
+end if CPU_32
 
 custom_dep :qt3d, [ :qt ] do | name, cfg |
 
