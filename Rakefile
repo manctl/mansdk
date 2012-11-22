@@ -854,7 +854,7 @@ custom_dep :qt3d, [ :qt ] do | name, cfg |
         qmake_path  = File.join dirs[:stage], 'bin', 'qmake'
     end
 
-    project_path = Fie.join dirs[:source], 'qt3d.pro'
+    project_path = File.join dirs[:source], 'qt3d.pro'
 
     cd dirs[:build] do
         # FIXME: Honor build configuration.
