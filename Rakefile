@@ -194,12 +194,14 @@ EOF
 #===============================================================================
 # Bootstrap
 
+NUM_CPUS = 2 # FIXME: Detect that.
+
 begin
     case RUBY_PLATFORM
         when /linux|darwin/  then
             $cmake_gen  = 'Unix Makefiles'
             $make_cmd   = 'make'
-            $make_flags = PARALLEL_BUILDS ? [ '-j' ] : [] + MAKE_FLAGS
+            $make_flags = PARALLEL_BUILDS ? [ '-j' + NUM_CPUS.to_s ] : [] + MAKE_FLAGS
         when /win32|mingw32/ then
             $cmake_gen  = PARALLEL_BUILDS ? 'NMake Makefiles JOM' : 'NMake Makefiles'
             $jom_dir    =  File.join HERE, 'core', 'deps', 'jom'
