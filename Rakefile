@@ -308,7 +308,7 @@ begin
             $make_cmd   = 'make'
             $make_flags = PARALLEL_BUILDS ? [ '-j' + CORES.to_s ] : [] + MAKE_FLAGS
         when SYS_WINDOWS then
-            $cmake_gen  = PARALLEL_BUILDS ? 'NMake Makefiles JOM' : 'NMake Makefiles'
+            $cmake_gen  = 'NMake Makefiles' # NMake Makefiles JOM makes it incompatible with QtCreator
             $jom_dir    =  File.join HERE, 'core', 'deps', 'jom'
             add_env_path $jom_dir
             $make_cmd   = PARALLEL_BUILDS ? 'jom' : 'nmake'
