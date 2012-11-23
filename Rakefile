@@ -629,7 +629,7 @@ cmake_dep :zlib, [], {
  }.tap { | flags |
     flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX and CPU_64
     flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX and CPU_64
-} if not LINUX
+} # if not LINUX
 
 cmake_dep :portaudio, [], {
     'PA_DLL_LINK_WITH_STATIC_RUNTIME' => [ BOOL, OFF ],
@@ -898,7 +898,7 @@ custom_dep :qt, [ :openssl ] do | name, cfg |
         end
     elsif UNIX then
         cd dirs[:build] do
-            sh File.join(dirs[:source], 'build-qt-unix-make.sh'), qt_cpus[CPU], qt_cfgs[cfg], dirs[:stage], $make_flags
+            sh File.join(dirs[:source], 'build-qt-unix-make.sh'), qt_cpus[CPU], qt_cfgs[cfg], dirs[:stage], *$make_flags
         end
     end
 end
