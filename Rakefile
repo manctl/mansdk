@@ -897,7 +897,7 @@ custom_dep :qt, [ :openssl ] do | name, cfg |
         end
     elsif UNIX then
         cd dirs[:build] do
-            sh File.join(dirs[:source], 'build-qt-unix-make.sh'), qt_cpus[CPU], qt_cfgs[cfg], dirs[:stage], *$make_flags
+            sh File.join(dirs[:source], 'build-qt-unix-make.sh'), qt_cpus[CPU], qt_cfgs[cfg], dirs[:stage], $make_cmd, *$make_flags
         end
     end
 end
