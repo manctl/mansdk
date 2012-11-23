@@ -929,7 +929,7 @@ custom_dep :ruby do | name, cfg |
              sh 'make', 'install', 'install-lib'
         end
     end
-end if CPU_32
+end if CPU_32 and not WINDOWS
 
 custom_dep :qt3d, [ :qt ] do | name, cfg |
 
