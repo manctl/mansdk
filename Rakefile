@@ -910,7 +910,7 @@ custom_dep :ruby do | name, cfg |
 
     dirs = dep_dirs name, cfg
 
-    add_env_path source_dir + '/win32/bin'
+    add_env_path File.join dirs[:source] , 'win32', 'bin'
 
     if WINDOWS then
         cd dirs[:build] do
@@ -929,7 +929,7 @@ custom_dep :ruby do | name, cfg |
              sh 'make', 'install', 'install-lib'
         end
     end
-end if CPU_32 and not WINDOWS
+end if CPU_32
 
 custom_dep :qt3d, [ :qt ] do | name, cfg |
 
