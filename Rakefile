@@ -886,7 +886,7 @@ custom_dep :qt, [ :openssl ] do | name, cfg |
 
     # FIXME: Ugly hack to avoid building qt every time.
     if File.exists? File.join(dirs[:build], '.qmake.cache') then
-#        next
+        next
     end
 
     if WINDOWS then
