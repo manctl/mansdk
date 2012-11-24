@@ -7,6 +7,7 @@ SDK_TITLE   = "#{ SDK_NAME  } #{ SDK_VERSION }"
 #-------------------------------------------------------------------------------
 
 require 'digest/sha1'
+require 'git'
 
 #-------------------------------------------------------------------------------
 # Library
@@ -299,7 +300,7 @@ end
 
 #-------------------------------------------------------------------------------
 
-# Post-Boostrap
+# Post-Bootstrap
 
 begin
     case SYS
@@ -462,7 +463,24 @@ Aliases:
 
 Deps:
 
-    #{ $deps.sort.join "\n    " }
+#{
+        lines = []
+        w = 0
+        $deps.each do | dep | w = w < dep.length ? dep.length : w end
+
+        count = 0
+        $deps.each do | dep |
+            g = Git.open(File.join(HERE, 'deps', dep))
+            head = g.object('HEAD').sha
+            align = w - dep.length
+        if count == 0 then
+            lines << "    #{ ' ' * w             }   #{ ' ' * 7    }" # FIXME: D   R   RD  M"
+        end
+            lines << "    #{ ' ' * align }#{ dep } @ #{ head[0..6] }" # FIXME: *   OK  OK  ."
+            count += 1
+        end
+        lines.sort.join "\n"
+}
 EOF
 end
 
