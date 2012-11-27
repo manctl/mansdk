@@ -648,7 +648,7 @@ cmake_dep :zlib, [], {
  }.tap { | flags |
     flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX and CPU_64
     flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX and CPU_64
-} # if not LINUX
+} if not LINUX
 
 cmake_dep :portaudio, [], {
     'PA_DLL_LINK_WITH_STATIC_RUNTIME' => [ BOOL, OFF ],
