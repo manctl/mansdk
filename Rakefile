@@ -7,6 +7,8 @@ SDK_TITLE   = "#{ SDK_NAME  } #{ SDK_VERSION }"
 #-------------------------------------------------------------------------------
 
 require 'digest/sha1'
+require 'rubygems'
+require 'git'
 
 #-------------------------------------------------------------------------------
 # Library
@@ -299,7 +301,7 @@ end
 
 #-------------------------------------------------------------------------------
 
-# Post-Boostrap
+# Post-Bootstrap
 
 begin
     case SYS
@@ -462,7 +464,24 @@ Aliases:
 
 Deps:
 
-    #{ $deps.sort.join "\n    " }
+#{
+        lines = []
+        w = 0
+        $deps.each do | dep | w = w < dep.length ? dep.length : w end
+
+        count = 0
+        $deps.each do | dep |
+            g = Git.open(File.join(HERE, 'deps', dep))
+            head = g.object('HEAD').sha
+            align = w - dep.length
+        if count == 0 then
+            lines << "    #{ ' ' * w             }   #{ ' ' * 7    }" # FIXME: D   R   RD  M"
+        end
+            lines << "    #{ ' ' * align }#{ dep } @ #{ head[0..6] }" # FIXME: *   OK  OK  ."
+            count += 1
+        end
+        lines.sort.join "\n"
+}
 EOF
 end
 
@@ -897,7 +916,7 @@ custom_dep :qt, [ :openssl ] do | name, cfg |
         end
     elsif UNIX then
         cd dirs[:build] do
-            sh File.join(dirs[:source], 'build-qt-unix-make.sh'), qt_cpus[CPU], qt_cfgs[cfg], dirs[:stage], *$make_flags
+            sh File.join(dirs[:source], 'build-qt-unix-make.sh'), qt_cpus[CPU], qt_cfgs[cfg], dirs[:stage], $make_cmd, *$make_flags
         end
     end
 end
