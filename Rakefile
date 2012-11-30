@@ -27,9 +27,7 @@ def read_file_in (dir, name)
 end
 
 def write_file (path, contents)
-    file = File.new(path, "w")
-    file << contents
-    file.close
+    File.open(path, "w") { | file | file << contents }
 end
 
 def write_file_in (dir, name, contents)
