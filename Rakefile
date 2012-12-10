@@ -98,7 +98,7 @@ CONFIGS = {
 STATIC_LIBRARIES = false
 
 PARALLEL_BUILDS  = true
-PARALLEL_TASKS   = true
+PARALLEL_TASKS   = false
 
 MACOSX_RPATH     = "@loader_path/../lib"
 LINUX_RPATH      = "\$ORIGIN/../lib"
@@ -371,9 +371,9 @@ $deps = []
 
 def parallel_task (hsh, &blk) return PARALLEL_TASKS ? multitask(hsh, &blk) : task(hsh, &blk) end
 
-multitask :default => :all
+task :default => :all
 
-multitask :all => cfg_sym(:all, CFG)
+task :all => cfg_sym(:all, CFG)
 
 task :pack => cfg_sym(:pack, CFG)
 
@@ -498,7 +498,7 @@ def custom_dep (sym, deps = [], &blk)
         task cfg_sym(:all, cfg) => cfg_sym(name, cfg)
         task cfg_sym(:clear, cfg) => cfg_sym(clear, cfg)
 
-        multitask cfg_sym(name, cfg, '-deps') => dep_deps(deps, cfg)
+        parallel_task cfg_sym(name, cfg, '-deps') => dep_deps(deps, cfg)
 
         task cfg_sym(only, cfg) do | task, args | blk.call(name, cfg) end
 
