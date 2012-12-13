@@ -902,6 +902,11 @@ custom_dep :qt, [ :openssl ] do | name, cfg |
         CPU_AMD64 => 'x86_64',
     }
 
+    msvc_cpus = {
+        CPU_X86   => 'x86',
+        CPU_AMD64 => 'x86_amd64',
+    }
+
     qt_cfgs = {
         CFG_D  => 'debug',
         CFG_R  => 'release',
@@ -916,7 +921,7 @@ custom_dep :qt, [ :openssl ] do | name, cfg |
 
     if WINDOWS then
         cd dirs[:build] do
-            sh File.join(dirs[:source], 'build-qt-windows-msvc10.cmd'), qt_cpus[CPU], qt_cfgs[cfg], dirs[:stage], $make_cmd
+            sh File.join(dirs[:source], 'build-qt-windows-msvc10.cmd'), msvc_cpus[CPU], qt_cfgs[cfg], dirs[:stage], $make_cmd
 
             # FIXME: Properly install ALL products in stage.
             cp_r File.join(dirs[:build], 'bin', 'qmake.exe'), File.join(dirs[:stage], 'bin', 'qmake.exe')
