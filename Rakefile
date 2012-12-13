@@ -921,7 +921,11 @@ custom_dep :qt, [ :openssl ] do | name, cfg |
 
     if WINDOWS then
         cd dirs[:build] do
-            sh File.join(dirs[:source], 'build-qt-windows-msvc10.cmd'), msvc_cpus[CPU], qt_cfgs[cfg], dirs[:stage], $make_cmd
+
+            # FIXME: Someone explain me how to perform reliable, deterministic parallel builds on windows.
+            make_flags = [ *$make_flags ] + ($make_cmd == 'jom' ? [ '-j1' ] : [])
+
+            sh File.join(dirs[:source], 'build-qt-windows-msvc10.cmd'), msvc_cpus[CPU], qt_cfgs[cfg], dirs[:stage], $make_cmd, *make_flags
 
             # FIXME: Properly install ALL products in stage.
             cp_r File.join(dirs[:build], 'bin', 'qmake.exe'), File.join(dirs[:stage], 'bin', 'qmake.exe')
