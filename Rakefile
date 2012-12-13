@@ -893,7 +893,7 @@ custom_dep :openssl do | name, cfg |
     end
 end
 
-custom_dep :qt, [ :openssl ] do | name, cfg |
+custom_dep :qt, [ :openssl, :jpeg, :png, :zlib ] do | name, cfg |
 
     dirs = dep_dirs name, cfg
 
