@@ -306,7 +306,7 @@ begin
         when /#{SYS_MACOSX}|#{SYS_LINUX}/ then
             $cmake_gen  = 'Unix Makefiles'
             $make_cmd   = 'make'
-            $make_flags = PARALLEL_BUILDS ? [ '-j' + CORES.to_s ] : [] + MAKE_FLAGS
+            $make_flags = (PARALLEL_BUILDS ? [ '-j' + CORES.to_s ] : []) + MAKE_FLAGS
         when SYS_WINDOWS then
             $cmake_gen  = 'NMake Makefiles' # NMake Makefiles JOM makes it incompatible with QtCreator
             $jom_dir    =  File.join HERE, 'core', 'deps', 'jom'
