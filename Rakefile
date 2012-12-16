@@ -844,8 +844,9 @@ custom_dep :opencv, [] + (WINDOWS ? [ :png ] : []) do | name, cfg |
         CFG_M  => CFG_R,
     }
 
-    cmake_build name, opencv_cfgs[cfg], {
+    cmake_build name, cfg, {
         'BUILD_SHARED_LIBS'              => [ BOOL  , (not STATIC_LIBRARIES) ],
+        'CMAKE_BUILD_TYPE'               => [ STRING, "#{ cmake_build_type (opencv_cfgs[cfg]) }" ],
         'BUILD_WITH_STATIC_CRT'          => [ BOOL  , OFF ],
         'BUILD_TIFF'                     => [ BOOL  , ON  ],
         'BUILD_TESTS'                    => [ BOOL  , OFF ],
