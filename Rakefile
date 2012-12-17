@@ -98,7 +98,7 @@ CONFIGS = {
 STATIC_LIBRARIES = false
 
 PARALLEL_BUILDS  = true
-PARALLEL_TASKS   = true
+PARALLEL_TASKS   = false
 
 MACOSX_RPATH     = "@loader_path/../lib"
 LINUX_RPATH      = "\$ORIGIN/../lib"
@@ -306,7 +306,7 @@ begin
         when /#{SYS_MACOSX}|#{SYS_LINUX}/ then
             $cmake_gen  = 'Unix Makefiles'
             $make_cmd   = 'make'
-            $make_flags = PARALLEL_BUILDS ? [ '-j' + CORES.to_s ] : [] + MAKE_FLAGS
+            $make_flags = (PARALLEL_BUILDS ? [ '-j' + CORES.to_s ] : []) + MAKE_FLAGS
         when SYS_WINDOWS then
             $cmake_gen  = 'NMake Makefiles' # NMake Makefiles JOM makes it incompatible with QtCreator
             $jom_dir    =  File.join HERE, 'core', 'deps', 'jom'
@@ -371,9 +371,9 @@ $deps = []
 
 def parallel_task (hsh, &blk) return PARALLEL_TASKS ? multitask(hsh, &blk) : task(hsh, &blk) end
 
-multitask :default => :all
+task :default => :all
 
-multitask :all => cfg_sym(:all, CFG)
+task :all => cfg_sym(:all, CFG)
 
 task :pack => cfg_sym(:pack, CFG)
 
@@ -498,7 +498,7 @@ def custom_dep (sym, deps = [], &blk)
         task cfg_sym(:all, cfg) => cfg_sym(name, cfg)
         task cfg_sym(:clear, cfg) => cfg_sym(clear, cfg)
 
-        multitask cfg_sym(name, cfg, '-deps') => dep_deps(deps, cfg)
+        parallel_task cfg_sym(name, cfg, '-deps') => dep_deps(deps, cfg)
 
         task cfg_sym(only, cfg) do | task, args | blk.call(name, cfg) end
 
@@ -894,13 +894,18 @@ custom_dep :openssl do | name, cfg |
     end
 end
 
-custom_dep :qt, [ :openssl ] do | name, cfg |
+custom_dep :qt, [ :openssl, :jpeg, :png, :zlib ] do | name, cfg |
 
     dirs = dep_dirs name, cfg
 
     qt_cpus = {
         CPU_X86   => 'x86',
         CPU_AMD64 => 'x86_64',
+    }
+
+    msvc_cpus = {
+        CPU_X86   => 'x86',
+        CPU_AMD64 => 'x86_amd64',
     }
 
     qt_cfgs = {
@@ -917,7 +922,11 @@ custom_dep :qt, [ :openssl ] do | name, cfg |
 
     if WINDOWS then
         cd dirs[:build] do
-            sh File.join(dirs[:source], 'build-qt-windows-msvc10.cmd'), qt_cpus[CPU], qt_cfgs[cfg], dirs[:stage], $make_cmd
+
+            # FIXME: Someone explain me how to perform reliable, deterministic parallel builds on windows.
+            make_flags = [ *$make_flags ] + ($make_cmd == 'jom' ? [ '-j1' ] : [])
+
+            sh File.join(dirs[:source], 'build-qt-windows-msvc10.cmd'), msvc_cpus[CPU], qt_cfgs[cfg], dirs[:stage], $make_cmd, *make_flags
 
             # FIXME: Properly install ALL products in stage.
             cp_r File.join(dirs[:build], 'bin', 'qmake.exe'), File.join(dirs[:stage], 'bin', 'qmake.exe')
