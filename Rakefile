@@ -312,6 +312,7 @@ begin
             $jom_dir    =  File.join HERE, 'core', 'deps', 'jom'
             add_env_path $jom_dir
             $make_cmd   = PARALLEL_BUILDS ? 'jom' : 'nmake'
+			$nmake_cmd  = 'nmake'
             $make_flags = [] + MAKE_FLAGS
         else
             raise UNKOWN_SYSTEM
@@ -922,11 +923,11 @@ custom_dep :qt, [ :openssl, :jpeg, :png, :zlib ] do | name, cfg |
 
     if WINDOWS then
         cd dirs[:build] do
-
             # FIXME: Someone explain me how to perform reliable, deterministic parallel builds on windows.
-            make_flags = [ *$make_flags ] + ($make_cmd == 'jom' ? [ '-j1' ] : [])
+            # make_flags = [ *$make_flags ] + ($make_cmd == 'jom' ? [ '-j1' ] : [])
+			make_flags = [ '' ] # Make sure we use normal nmake here.
 
-            sh File.join(dirs[:source], 'build-qt-windows-msvc10.cmd'), msvc_cpus[CPU], qt_cfgs[cfg], dirs[:stage], $make_cmd, *make_flags
+            sh File.join(dirs[:source], 'build-qt-windows-msvc10.cmd'), msvc_cpus[CPU], qt_cfgs[cfg], dirs[:stage], $nmake_cmd, *make_flags
 
             # FIXME: Properly install ALL products in stage.
             cp_r File.join(dirs[:build], 'bin', 'qmake.exe'), File.join(dirs[:stage], 'bin', 'qmake.exe')
