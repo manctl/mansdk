@@ -6,6 +6,8 @@ GENERATOR=skanweb-license-generator
 
 cd $STAGE
 
+strip $CHECKER $GENERATOR
+
 rsync -e "ssh -p 2280" -LvzP $CHECKER \
     skanect@manctl.com:skanweb/license-checker/
 
