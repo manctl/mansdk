@@ -200,7 +200,7 @@ cores ()
 int
 cores ()
 {
-    return sysconf( _SC_NPROCESSORS_ONLN );
+    return sysconf(_SC_NPROCESSORS_ONLN);
 }
 #endif
 
@@ -259,7 +259,7 @@ begin
             cmake_gen  = 'NMake Makefiles'
             make_cmd   = 'nmake'
         else
-            raise UNKOWN_SYSTEM
+            raise UNKNOWN_SYSTEM
     end
 
     source_dir = make_build_subdir 'platform'
@@ -314,7 +314,7 @@ begin
             $make_cmd   = PARALLEL_BUILDS ? 'jom' : 'nmake'
             $make_flags = [] + MAKE_FLAGS
         else
-            raise UNKOWN_SYSTEM
+            raise UNKNOWN_SYSTEM
     end
 end
 
@@ -846,7 +846,7 @@ custom_dep :opencv, [] + (WINDOWS ? [ :png ] : []) do | name, cfg |
 
     cmake_build name, cfg, {
         'BUILD_SHARED_LIBS'              => [ BOOL  , (not STATIC_LIBRARIES) ],
-        'CMAKE_BUILD_TYPE'               => [ STRING, "#{ cmake_build_type (opencv_cfgs[cfg]) }" ],
+        'CMAKE_BUILD_TYPE'               => [ STRING, "#{ cmake_build_type(opencv_cfgs[cfg]) }" ],
         'BUILD_WITH_STATIC_CRT'          => [ BOOL  , OFF ],
         'BUILD_TIFF'                     => [ BOOL  , ON  ],
         'BUILD_TESTS'                    => [ BOOL  , OFF ],
