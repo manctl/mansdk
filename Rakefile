@@ -206,10 +206,11 @@ cores ()
 
 //------------------------------------------------------------------------------
 
-void
+int
 usage (int argc, char* argv[], int ret)
 {
     std::cout << argv[0] << "(sys|cpu|cores)" << std::endl;
+    return ret;
 }
 
 }
@@ -217,8 +218,8 @@ usage (int argc, char* argv[], int ret)
 int
 main (int argc, char* argv[])
 {
-    if (argc < 1)
-        usage(argc, argv, 1);
+    if (argc < 2)
+        return usage(argc, argv, 1);
 
     const std::string arg = argv[1];
 
@@ -226,7 +227,7 @@ main (int argc, char* argv[])
     else if (arg == "sys"  ) std::cout << sys     << std::endl;
     else if (arg == "cores") std::cout << cores() << std::endl;
     else
-        usage(argc, argv, 2);
+        return usage(argc, argv, 2);
 }
 EOF
 
