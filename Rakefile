@@ -145,24 +145,72 @@ PLATFORM_CPP = <<EOF
 #include <iostream>
 #include <string>
 
-namespace {
-
 //------------------------------------------------------------------------------
 // SYS
 
 // See: http://poshlib.hookatooka.com/poshlib/trac.cgi.
 const char sys [] =
 #if   defined(_WINDOWS) || defined(_WIN64) || defined(__WINDOWS__)
-    "windows"
+#   define SYS_WINDOWS
+              "windows"
 #elif defined(__linux__) || defined(__linux) || defined(linux)
-    "linux"
+#   define SYS_LINUX
+              "linux"
 #elif defined(__APPLE__) && defined(__MACH__)
-    "macosx"
+#   define SYS_MACOSX
+              "macosx"
 #else
-    "unknown"
+#   define SYS_UNKNOWN
+              "unknown"
 #endif
 ;
 
+//------------------------------------------------------------------------------
+// OS
+
+#if defined(SYS_WINDOWS)
+const char* os ()
+{
+    return ""; // FIXME: Implement.
+}
+#elif defined(SYS_LINUX)
+const char* os ()
+{
+    return ""; // FIXME: Implement.
+}
+#elif defined(SYS_MACOSX)
+#   include <errno.h>
+#   include <sys/sysctl.h>
+#   include <vector>
+#   include <cstring>
+
+const char* os ()
+{
+    size_t size = 0;
+    int ret = sysctlbyname("kern.osrelease", NULL, &size, NULL, 0);
+    if (0 != ret)
+        return "error";
+
+    std::vector<char> buf(size);
+    ret = sysctlbyname("kern.osrelease", &buf[0], &size, NULL, 0);
+    if (0 != ret)
+        return "error";
+
+    if      (0 == std::strncmp(&buf[0], "12.", 3))
+        return "10.8";
+    else if (0 == std::strncmp(&buf[0], "11.", 3))
+        return "10.7";
+    else if (0 == std::strncmp(&buf[0], "10.", 3))
+        return "10.6";
+
+    return "";
+}
+#else
+const char* os ()
+{
+    return "";
+}
+#endif
 
 //------------------------------------------------------------------------------
 // CPU
@@ -209,10 +257,8 @@ cores ()
 int
 usage (int argc, char* argv[], int ret)
 {
-    std::cout << argv[0] << "(sys|cpu|cores)" << std::endl;
+    std::cout << argv[0] << "(sys|os|cpu|cores)" << std::endl;
     return ret;
-}
-
 }
 
 int
@@ -225,6 +271,7 @@ main (int argc, char* argv[])
 
     if      (arg == "cpu"  ) std::cout << cpu     << std::endl;
     else if (arg == "sys"  ) std::cout << sys     << std::endl;
+    else if (arg == "os"   ) std::cout << os()    << std::endl;
     else if (arg == "cores") std::cout << cores() << std::endl;
     else
         return usage(argc, argv, 2);
@@ -294,6 +341,7 @@ begin
     def platform_val (arg) return `#{ PLATFORM_BIN } #{ arg }`.strip end
 
     SYS   = platform_val 'sys'
+    OS    = platform_val 'os'
     CPU   = platform_val 'cpu'
     CORES = platform_val 'cores'
 end
