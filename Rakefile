@@ -372,13 +372,20 @@ end
 # Platform-specific Keywords
 
 WINDOWS = SYS == SYS_WINDOWS
-MACOSX  = SYS == SYS_MACOSX
-LINUX   = SYS == SYS_LINUX
-UNIX    = LINUX || MACOSX
-AMD64   = CPU == CPU_AMD64
-X86     = CPU == CPU_X86
-CPU_64  = AMD64
-CPU_32  = X86
+
+MACOSX = SYS == SYS_MACOSX
+MACOSX_MOUNTAIN_LION = MACOSX and OS == '10.8'
+MACOSX_LION          = MACOSX and OS == '10.7'
+MACOSX_SNOW_LEOPARD  = MACOSX and OS == '10.6'
+
+LINUX = SYS == SYS_LINUX
+
+UNIX = LINUX || MACOSX
+
+AMD64  = CPU == CPU_AMD64
+X86    = CPU == CPU_X86
+CPU_64 = AMD64
+CPU_32 = X86
 
 # Cross-platform Helpers
 
@@ -707,7 +714,7 @@ cmake_dep :vectorial
 
 cmake_dep :jpeg
 
-cmake_dep :cryptopp
+cmake_dep :cryptopp, [], MACOSX_MOUNTAIN_LION ? { 'CMAKE_CXX_COMPILER' => [ STRING, '/usr/bin/g++' ] } : {}
 
 cmake_dep :png, WINDOWS ? [ :zlib ] : [], {
     'PNG_NO_CONSOLE_IO'   => [ BOOL, OFF ],
@@ -880,6 +887,7 @@ cmake_dep :pcl, [ :boost, :eigen, :flann, :qhull, :qt, :vtk ] + (WINDOWS ? [ :pn
 }.tap { | flags |
     flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX and CPU_64
     flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX and CPU_64
+    flags['CMAKE_CXX_COMPILER'] = [ STRING, '/usr/bin/g++' ] if MACOSX_MOUNTAIN_LION
 }
 
 #, [ '--trace' ]
