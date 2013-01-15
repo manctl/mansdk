@@ -889,6 +889,7 @@ cmake_dep :pcl, [ :boost, :eigen, :flann, :qhull, :qt, :vtk ] + (WINDOWS ? [ :pn
     flags['CMAKE_C_FLAGS'  ] = [ STRING, '-fPIC' ] if LINUX and CPU_64
     flags['CMAKE_CXX_FLAGS'] = [ STRING, '-fPIC' ] if LINUX and CPU_64
     flags['CMAKE_CXX_COMPILER'] = [ STRING, '/usr/bin/g++' ] if MACOSX_MOUNTAIN_LION
+    flags['CUDA_HOST_COMPILER'] = [ STRING, '/usr/bin/gcc' ] if MACOSX_MOUNTAIN_LION
 }
 
 #, [ '--trace' ]
