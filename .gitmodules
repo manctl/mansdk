@@ -79,3 +79,6 @@
 [submodule "cryptopp"]
 	path = deps/cryptopp
 	url = git@bitbucket.org:manctl/cryptopp
+[submodule "openni2"]
+	path = deps/openni2
+	url = git@github.com:manctl/openni2
