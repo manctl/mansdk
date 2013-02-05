@@ -991,7 +991,8 @@ custom_dep :qt, [ :openssl, :jpeg, :png, :zlib ] do | name, cfg |
         end
     elsif UNIX then
         cd dirs[:build] do
-            sh File.join(dirs[:source], 'build-qt-unix-make.sh'), qt_cpus[CPU], qt_cfgs[cfg], dirs[:stage], SYS, $make_cmd, *$make_flags
+            mkdoc = '1' # FIXME: Make this configurable.
+            sh File.join(dirs[:source], 'build-qt-unix-make.sh'), qt_cpus[CPU], qt_cfgs[cfg], dirs[:stage], SYS, mkdoc, $make_cmd, *$make_flags
         end
     end
 end
