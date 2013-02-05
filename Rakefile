@@ -1044,4 +1044,4 @@ custom_dep :qt3d, [ :qt ] do | name, cfg |
         sh $make_cmd, *$make_flags
         sh $make_cmd, "INSTALL_ROOT=#{ dirs[:stage] }", 'install'
     end
-end if not WINDOWS # Fails at install on Windows.
+end if not WINDOWS and not MACOSX_MOUNTAIN_LION # Fails at install on Windows, fails at build on MacOSX 10.8.
