@@ -739,6 +739,8 @@ cmake_dep :openni, [ :jpeg, :usb, ], {
     'OPENNI_BUILD_SAMPLES' => [ BOOL, ON ],
 } if not WINDOWS
 
+cmake_dep :openni2, [ :jpeg, :usb, ]
+
 cmake_dep :primesensor,   [ :openni ] if not WINDOWS
 
 cmake_dep :sensorkinect,  [ :openni ] if not WINDOWS
