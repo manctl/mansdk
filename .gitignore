@@ -7,3 +7,6 @@ output-debug
 build-relwithdebinfo
 stage-relwithdebinfo
 output-relwithdebinfo
+mansdk.config
+mansdk.creator.user
+mansdk.includes
