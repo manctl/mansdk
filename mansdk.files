@@ -1,0 +1,11 @@
+cmds/cmd.sh
+cmds/dev-move-deps.sh
+cmds/git-track-manctl-branches.sh
+cmds/move-deps.sh
+cmds/move-submodule.sh
+cmds/release_skanbreast.sh
+cmds/set-local-urls.sh
+cmds/set-private-urls.sh
+cmds/set-public-urls.sh
+Rakefile
+README.md
