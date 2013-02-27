@@ -82,3 +82,6 @@
 [submodule "openni2"]
 	path = deps/openni2
 	url = git@github.com:manctl/openni2
+[submodule "qt5"]
+	path = deps/qt5
+	url = git@bitbucket.org:manctl/qt5
