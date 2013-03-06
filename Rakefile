@@ -1071,6 +1071,7 @@ custom_dep :ruby do | name, cfg |
 
     dirs = dep_dirs name, cfg
 
+    # FIXME: This will also modify the environment of subsequent unrelated targets.
     add_env_path File.join dirs[:source] , 'win32', 'bin'
 
     if WINDOWS then
