@@ -7,5 +7,6 @@ cmds/release_skanbreast.sh
 cmds/set-local-urls.sh
 cmds/set-private-urls.sh
 cmds/set-public-urls.sh
+core/cmds/yes-run.sh
 Rakefile
 README.md

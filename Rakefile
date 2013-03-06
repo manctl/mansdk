@@ -351,6 +351,8 @@ end
 # Post-Bootstrap
 
 begin
+    $core_cmds_dir = File.join HERE, 'core', 'cmds'
+
     case SYS
         when /#{SYS_MACOSX}|#{SYS_LINUX}/ then
             $cmake_gen  = 'Unix Makefiles'
@@ -394,6 +396,10 @@ def rpath ()
     elsif MACOSX then return MACOSX_RPATH
     end
     return ""
+end
+
+def cmd (name)
+    return File.join $core_cmds_dir, name + (UNIX ? '.sh' : '.cmd')
 end
 
 #-------------------------------------------------------------------------------
@@ -996,6 +1002,64 @@ custom_dep :qt, [ :openssl, :jpeg, :png, :zlib ] do | name, cfg |
         cd dirs[:build] do
             mkdoc = '1' # FIXME: Make this configurable.
             sh File.join(dirs[:source], 'build-qt-unix-make.sh'), qt_cpus[CPU], qt_cfgs[cfg], dirs[:stage], SYS, mkdoc, $make_cmd, *$make_flags
+        end
+    end
+end
+
+custom_dep :qt5, [ :openssl, :jpeg, :png, :zlib ] do | name, cfg |
+
+    dirs = dep_dirs name, cfg
+
+    qt5_cpus = {
+        CPU_X86   => 'x86',
+        CPU_AMD64 => 'x86_64',
+    }
+
+    msvc_cpus = {
+        CPU_X86   => 'x86',
+        CPU_AMD64 => 'x86_amd64',
+    }
+
+    qt5_cfgs = {
+        CFG_D  => 'debug',
+        CFG_R  => 'release',
+        CFG_RD => 'release',
+        CFG_M  => 'release',
+    }
+
+    mkdoc = '1' # FIXME: Make this configurable.
+
+    if WINDOWS then
+        # FIXME: Implement.
+    elsif UNIX then
+        cd dirs[:build] do
+
+            extra_args = []
+            extra_args << '-no-framework' if MACOSX
+            extra_args << '-webkit-debug' << '-declarative-debug' if cfg == 'debug'
+            extra_args << '-nomake' << 'tools' if mkdoc
+
+            sh cmd('yes-run'), File.join(dirs[:source], 'configure'),
+                '-opensource',
+                '-developer-build',
+                '-prefix', dirs[:stage],
+                '-arch', qt5_cpus[CPU],
+                "-#{qt5_cfgs[cfg]}",
+                '-system-zlib',
+                '-system-libpng',
+                '-nomake', 'examples',
+                '-nomake', 'demos',
+                '-I', File.join(dirs[:stage], 'include'),
+                '-L', File.join(dirs[:stage], 'lib'),
+                *extra_args
+
+            sh $make_cmd, *$make_flags
+            sh $make_cmd, *([ *$make_flags ] << 'install')
+
+            if mkdoc then
+                sh $make_cmd, 'docs'
+                sh $make_cmd, 'install_docimages', 'install_htmldocs', 'install_qchdocs'
+            end
         end
     end
 end
