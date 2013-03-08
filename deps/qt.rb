@@ -1,4 +1,7 @@
-custom_dep :qt, [ :openssl, :jpeg, :png, :zlib ] do | name, cfg |
+custom_dep :qt, [ :openssl, :jpeg, :png, :zlib ] + (QT5 ? [ :qt5 ] : []) do | name, cfg |
+
+    # Qt 4 and Qt 5 do not coexist peacefully in the same stage tree, on macosx.
+    if QT5 then return end
 
     dirs = dep_dirs name, cfg
 

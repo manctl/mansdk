@@ -87,4 +87,4 @@ custom_dep :qt5, [ :openssl, :jpeg, :png, :zlib ] do | name, cfg |
             end
         end
     end
-end
+end if QT5
