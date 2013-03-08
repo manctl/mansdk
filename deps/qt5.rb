@@ -83,7 +83,7 @@ custom_dep :qt5, [ :openssl, :jpeg, :png, :zlib ] do | name, cfg |
 
             if mkdoc then
                 sh $make_cmd, 'docs'
-                sh $make_cmd, 'install_htmldocs', 'install_qchdocs'
+                sh $make_cmd, 'install_html_docs', 'install_qch_docs'
             end
         end
     end
