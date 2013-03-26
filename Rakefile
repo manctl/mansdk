@@ -103,7 +103,7 @@ CONFIGS = {
 STATIC_LIBRARIES = false
 
 PARALLEL_BUILDS  = true
-PARALLEL_TASKS   = false
+PARALLEL_TASKS   = false # FIXME: Make this work, eventually.
 
 MACOSX_RPATH     = "@loader_path/../lib"
 LINUX_RPATH      = "\$ORIGIN/../lib"
