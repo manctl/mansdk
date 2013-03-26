@@ -94,6 +94,10 @@ Removes absolutely everything.
 
 Displays hopefully helpful information.
 
+ * rake QT5=ON
+
+Builds everything using Qt5 instead of Qt4. WARNING: Do not mix Qt4 & Qt5 builds.
+
 ## About
 
 ### Why?

@@ -82,6 +82,14 @@ def mkdir_p_cd (path, &blk)
     cd path, &blk
 end
 
+def cmd_bool (str)
+    return str.upcase != 'OFF' && str.upcase != 'FALSE' && str != '0'
+end
+
+def on_off (bool)
+    return bool ? 'ON' : 'OFF'
+end
+
 #-------------------------------------------------------------------------------
 # Constants
 
@@ -496,6 +504,8 @@ Variables:
     BUILD        = #{ BUILD }
     OUTPUT       = #{ OUTPUT }
     STAGE        = #{ STAGE }
+
+#{DEPS_VARIABLES}
 
 Targets:
 
