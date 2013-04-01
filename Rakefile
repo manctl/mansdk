@@ -6,8 +6,8 @@ SDK_TITLE   = "#{ SDK_NAME  } #{ SDK_VERSION }"
 
 #-------------------------------------------------------------------------------
 
-require 'digest/sha1'
-require 'rubygems'
+#require 'digest/sha1'
+#require 'rubygems'
 require 'git'
 
 #-------------------------------------------------------------------------------

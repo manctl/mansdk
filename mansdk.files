@@ -9,6 +9,7 @@ cmds/set-private-urls.sh
 cmds/set-public-urls.sh
 core/cmds/yes-run.sh
 Rakefile
+Gemfile
 README.md
 deps.rb
 deps/boost.rb
