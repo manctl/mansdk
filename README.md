@@ -14,6 +14,10 @@ Use at your own risk.
  * A functional C++ compilation toolchain.
  * Windows | MacOSX | Linux
 
+## Installation
+
+bundle
+
 ## Usage
 
 ### Examples
