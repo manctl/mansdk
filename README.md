@@ -8,11 +8,13 @@ Use at your own risk.
 
 ## Prerequisites
 
- * /usr/bin/env ruby --version >= 1.8-ish
- * CMake 2.8.10
- * Perl
- * A functional C++ compilation toolchain.
  * Windows | MacOSX | Linux
+ * A functional C++ compilation toolchain.
+ * Perl
+  * Windows: (ActiveState)
+  * Unix (system default)
+ * [CMake](http://www.cmake.org) >= 2.8.10
+ * [Ruby](http://www.ruby-lang.org) >= 1.9.3
 
 ## Installation
 
