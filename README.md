@@ -24,85 +24,93 @@ bundle
 
 ### Examples
 
- * rake
+ * Build & install everything in MANSDK_DIR/{build,stage}:
 
-Builds & installs everything in MANSDK_DIR/{build,stage}.
+        rake
 
- * rake all
+ * More verbose version of the above:
 
-More verbose version of the above.
+        rake all
 
- * rake PREFIX=/builds/mansdk
+ * Builds & installs everything in /builds/mansdk/{build,stage}:
 
-Builds & installs everything in /builds/mansdk/{build,stage}.
+        rake PREFIX=/builds/mansdk
 
- * rake CONFIG=debug
+ * Build & install all the debug targets:
 
-Builds & installs all the debug targets.
+        rake CONFIG=debug
 
- * rake debug
+ * Shorthand for the above:
 
-Shorthand for the above.
+        rake debug
 
- * rake all:debug
+ * Shorthand for the above:
 
-More verbose version of the above.
+        rake D
 
- * rake pcl
+ * Totally verbose version of the above:
 
-Builds pcl and its dependencies.
+        rake all:debug
 
- * rake pcl-only
+ * Build pcl and its dependencies:
 
-Builds pcl alone.
+        rake pcl
 
- * rake pcl:release
+ * Builds pcl alone:
 
-Builds pcl in release mode.
+        rake pcl-only
 
- * rake CONFIG=debug usb jpeg pcl-only:release
+ * Build pcl in release mode:
 
-Builds usb & jpeg in debug mode and pcl alone in release mode.
+        rake pcl:release
 
- * rake MAKE_FLAGS=-j8
+ * Build usb & jpeg in debug mode and pcl alone in release mode:
 
-Builds (using up to 8 cores).
+        rake CONFIG=debug usb jpeg pcl-only:release
 
- * rake debug release relwithdebinfo minsizerel
+ * Build using up to 8 cores (auto-detected by default):
 
-Builds absolutely everything. Make sure your build directory storage is up to the task.
+        rake MAKE_FLAGS=-j8
 
- * rake clear
+ * Build absolutely everything:
 
-Deletes the entire default configuration (stage, output & build).
+        rake debug release relwithdebinfo minsizerel
 
- * rake clear:{release,debug}
+    (Make sure your build directory storage is up to the task.)
 
-Deletes the entire release and debug configurations (stages, outputs & builds).
+ * Delete the entire default configuration (stage, output & build):
 
- * rake pcl-clear
+        rake clear
 
-Deletes the default pcl build directory and the builds directories of all its dependencies.
+ * Delete the entire release and debug configurations (stages, outputs & builds):
 
- * rake pcl-clear-only
+        rake clear:{release,debug}
 
-Deletes the default pcl build directory.
+ * Delete the default pcl build directory and the builds directories of all its dependencies:
 
- * rake pcl-clear-only:debug
+        rake pcl-clear
 
-Deletes the debug pcl build directory.
+ * Delete the default pcl build directory:
 
- * rake wipe
+        rake pcl-clear-only
 
-Removes absolutely everything.
+ * Delete the debug pcl build directory:
 
- * rake help
+    rake pcl-clear-only:debug
 
-Displays hopefully helpful information.
+ * Remove absolutely everything:
 
- * rake QT5=ON
+        rake wipe
 
-Builds everything using Qt5 instead of Qt4. WARNING: Do not mix Qt4 & Qt5 builds.
+ * Display hopefully helpful information:
+
+        rake help
+
+ * Build everything using Qt5 instead of Qt4:
+
+        rake QT5=ON
+
+    WARNING: Do not mix Qt4 & Qt5 builds.
 
 ## About
 
@@ -115,4 +123,4 @@ Because we found it incredibly hard to build stable cross-platform software on a
  * Nicolas Burrus
  * Nicolas Tisserand
 
-More info: http://manctl.com
+More info: <http://manctl.com>
