@@ -8,13 +8,52 @@ Use at your own risk.
 
 ## Prerequisites
 
- * Windows | MacOSX | Linux
- * A functional C++ compilation toolchain.
- * Perl
-  * Windows: (ActiveState)
-  * Unix (system default)
- * [CMake](http://www.cmake.org) >= 2.8.10
- * [Ruby](http://www.ruby-lang.org) >= 1.9.3
+* Windows | MacOSX | Linux
+* A functional C++ compilation toolchain.
+* Perl
+    * Windows: (ActiveState)
+    * Unix (system default)
+* [Ruby](http://www.ruby-lang.org) >= 1.9.3
+* [CMake](http://www.cmake.org) >= 2.8.10
+
+### Mac OS X Setup
+
+* Xcode Command Line Tools
+
+    Open Xcode and update.
+
+* Homebrew
+
+    <http://mxcl.github.io/homebrew>
+
+        ruby -e "$(curl -fsSL https://raw.github.com/mxcl/homebrew/go)"
+
+* GCC 4.8
+
+    * Install it using homebrew:
+
+            brew update
+            brew tap homebrew/versions
+            brew install gcc48
+
+    * If there are problems with downloading cloog, get it from [here](http://gcc.cybermirror.org/infrastructure/cloog-0.18.0.tar.gz), put it in `/usr/local/Library/Downloads` and patch homebrew as follows:
+
+            -  url 'http://www.bastoul.net/cloog/pages/download/count.php3?url=./cloog-0.18.0.tar.gz'
+            +  url 'file:///usr/local/Library/Downloads/cloog-0.18.0.tar.gz'
+
+    * Ruby chokes on the homebrew-provided openssl. Remove it:
+
+            brew uninstall openssl
+
+* Ruby
+
+    <http://rvm.io>
+
+        curl -L https://get.rvm.io | bash -s stable --ruby=1.9.3 --autolibs=enabled
+
+* Cmake
+
+    <http://www.cmake.org/files/v2.8/cmake-2.8.10.2-Darwin64-universal.dmg>
 
 ## Installation
 
