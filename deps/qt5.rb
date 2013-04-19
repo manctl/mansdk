@@ -28,7 +28,8 @@ custom_dep :qt5, [ :openssl, :jpeg, :png, :zlib ] do | name, cfg |
     mkdoc = true # FIXME: Make this configurable.
 
     bad_qt_libs = [
-        { :name => 'WebKitWidgets', :dir => 'qtwebkit' }
+        { :from => 'QtWebKitWidgets', :to => 'Qt5WebKitWidgets'      , :dir => 'qtwebkit' },
+        { :from => 'QtWebKitWidgets', :to => 'Qt5WebKitWidgets_debug', :dir => 'qtwebkit' },
     ]
 
     if MACOSX then
@@ -43,7 +44,7 @@ custom_dep :qt5, [ :openssl, :jpeg, :png, :zlib ] do | name, cfg |
                     '.la',
                     '.prl',
                 ].each do | suffix |
-                    sh 'ln', '-sf', "libQt#{lib[:name]}#{suffix}", "libQt5#{lib[:name]}#{suffix}"
+                    sh 'ln', '-sf', "lib#{lib[:from]}#{suffix}", "lib#{lib[:to]}#{suffix}"
                 end
             end
         end
